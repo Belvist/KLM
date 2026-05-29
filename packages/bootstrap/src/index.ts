@@ -2,7 +2,7 @@ import { createAuditLogger, type AuditLogger } from "@klm/audit";
 import { ModelRouter } from "@klm/model-adapters";
 import { KlmRuntime } from "@klm/runtime";
 import { createSemanticStack } from "@klm/semantic-memory";
-import { createStateStore, type StateStore } from "@klm/state-store";
+import { createStateStore, resetSharedStoreForTests, type StateStore } from "@klm/state-store";
 
 export { extractTenant, getKlmEnvironment, TenantValidationError } from "./tenant.js";
 export type { KlmEnvironment } from "./tenant.js";
@@ -16,12 +16,24 @@ export interface KlmApp {
 
 let appInstance: KlmApp | null = null;
 
-export async function createKlmApp(): Promise<KlmApp> {
+export interface CreateKlmAppOptions {
+  /** Reset singleton — use in evals to simulate a fresh process. */
+  reset?: boolean;
+  /** Inject router (e.g. mock adapter for e2e evals). */
+  router?: ModelRouter;
+}
+
+export async function createKlmApp(options: CreateKlmAppOptions = {}): Promise<KlmApp> {
+  if (options.reset) {
+    appInstance = null;
+    resetSharedStoreForTests();
+  }
+
   if (appInstance) return appInstance;
 
   const store = await createStateStore();
   const audit = createAuditLogger(process.env.DATABASE_URL);
-  const router = new ModelRouter({ audit });
+  const router = options.router ?? new ModelRouter({ audit });
 
   const databaseUrl = process.env.DATABASE_URL;
   const semanticEnabled =
@@ -50,4 +62,5 @@ export async function createKlmApp(): Promise<KlmApp> {
 
 export function resetKlmAppForTests(): void {
   appInstance = null;
+  resetSharedStoreForTests();
 }
