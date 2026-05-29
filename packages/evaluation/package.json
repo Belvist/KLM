@@ -6,17 +6,22 @@
   "scripts": {
     "build": "node -e \"process.exit(0)\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "eval": "node --import tsx src/run.ts"
+    "eval": "node --import tsx src/run.ts",
+    "eval:integration": "node --import tsx src/integration/run.ts"
   },
   "dependencies": {
+    "@klm/audit": "workspace:*",
     "@klm/core": "workspace:*",
     "@klm/memory-core": "workspace:*",
+    "@klm/model-adapters": "workspace:*",
     "@klm/runtime": "workspace:*",
-    "@klm/verifier": "workspace:*",
+    "@klm/semantic-memory": "workspace:*",
     "@klm/state-store": "workspace:*",
-    "@klm/verifier": "workspace:*"
+    "@klm/verifier": "workspace:*",
+    "pg": "^8.14.1"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.11",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

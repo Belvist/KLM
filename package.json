@@ -12,6 +12,7 @@
     "db:migrate": "pnpm --filter @klm/state-store db:migrate",
     "db:seed": "pnpm --filter @klm/state-store db:seed",
     "eval": "pnpm --filter @klm/evaluation eval",
+    "eval:integration": "pnpm --filter @klm/evaluation eval:integration",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },

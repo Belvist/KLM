@@ -1,0 +1,59 @@
+name: KLM CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-eval:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: klm
+          POSTGRES_PASSWORD: klm
+          POSTGRES_DB: klm
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U klm -d klm"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://klm:klm@localhost:5432/klm
+      KLM_STORE_BACKEND: postgres
+      KLM_SEMANTIC_MEMORY: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm build
+
+      - run: pnpm typecheck
+
+      - run: pnpm test
+
+      - run: pnpm db:migrate
+
+      - run: pnpm db:seed
+
+      - run: pnpm eval
+
+      - run: pnpm eval:integration

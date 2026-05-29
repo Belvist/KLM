@@ -109,22 +109,37 @@ importers:
 
   packages/evaluation:
     dependencies:
+      '@klm/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@klm/core':
         specifier: workspace:*
         version: link:../core
       '@klm/memory-core':
         specifier: workspace:*
         version: link:../memory-core
+      '@klm/model-adapters':
+        specifier: workspace:*
+        version: link:../model-adapters
       '@klm/runtime':
         specifier: workspace:*
         version: link:../runtime
+      '@klm/semantic-memory':
+        specifier: workspace:*
+        version: link:../semantic-memory
       '@klm/state-store':
         specifier: workspace:*
         version: link:../state-store
       '@klm/verifier':
         specifier: workspace:*
         version: link:../verifier
+      pg:
+        specifier: ^8.14.1
+        version: 8.21.0
     devDependencies:
+      '@types/pg':
+        specifier: ^8.11.11
+        version: 8.20.0
       tsx:
         specifier: ^4.19.3
         version: 4.22.3
@@ -153,6 +168,9 @@ importers:
 
   packages/model-adapters:
     dependencies:
+      '@klm/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@klm/core':
         specifier: workspace:*
         version: link:../core

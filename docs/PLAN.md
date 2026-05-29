@@ -1,60 +1,60 @@
 # KLM Runtime — Product Roadmap
 
-**Продукт:** см. [`PRODUCT.md`](./PRODUCT.md) · **Правила:** `.cursor/rules/klm-product.mdc`
+**Продукт:** [`PRODUCT.md`](./PRODUCT.md) · **Правила:** `.cursor/rules/klm-product.mdc`
 
 ---
 
-## Phase 1 / 1.5 — ✅ Закрыто
+## Phase 2 — ✅
 
-Runtime skeleton, persistence fixes, shared store, dedup, tenancy, scorer.
+Semantic memory, audit, evals, streaming, docker.
 
 ---
 
-## Phase 2 — Product (2026-05-29) 🔄
+## Phase 2.1 — ✅ (2026-05-29)
 
 | # | Задача | Статус |
 |---|--------|--------|
-| 11 | Docker pgvector + Dockerfile + `pnpm docker:up` | ✅ |
-| 12 | Migrations 002 + `pnpm db:migrate` + `pnpm db:seed` | ✅ |
-| 13 | `@klm/semantic-memory` (embeddings + pgvector + hybrid activator) | ✅ |
-| 14 | `@klm/audit` (Postgres + console audit, model_calls table) | ✅ |
-| 15 | Real streaming (`compileStream` → same KLM answer) | ✅ |
-| 16 | `@klm/evaluation` — `pnpm eval` | ✅ |
-| 17 | SSO / RBAC | ⏳ Phase 3 |
+| 1 | Semantic chunk upsert dedup `(project_id, chunk_type, source_id)` | ✅ migration 003 + dedup cleanup |
+| 2 | ModelRouter → `model_calls` telemetry (per-request, no mutable context) | ✅ |
+| 3 | `KLM_SEMANTIC_MEMORY=true` explicit opt-in | ✅ |
+| 4 | `pnpm eval:integration` (PostgreSQL) | ✅ |
+| 5 | GitHub Actions CI | ✅ `.github/workflows/klm-ci.yml` |
+
+**Примечание:** `ModelRouter` не хранит `requestId`/`projectId` во внутреннем state — только в каждом `ModelRequest`.
 
 ---
 
-## Запуск продукта локально
+## Phase 2.2 — следующее (после зелёного CI)
+
+| # | Задача |
+|---|--------|
+| 1 | HTTP API e2e eval |
+| 2 | MCP shared-store eval |
+| 3 | Stream → final memory update eval |
+| 4 | `model_calls` cost/latency dashboard endpoint |
+
+---
+
+## Phase 3 — после Phase 2.2
+
+| # | Задача |
+|---|--------|
+| 17 | `organizations` / `workspaces` / `users` tables |
+| 18 | SSO / RBAC |
+| 19 | Failed model_calls outcome column |
+| 20 | IVFFlat index for embeddings at scale |
+
+---
+
+## Команды
 
 ```bash
-cp .env.example .env
-# OPENAI_API_KEY — для semantic memory (embeddings)
-# OPENROUTER_API_KEY — для completions
-
 pnpm docker:up
 pnpm db:migrate
 pnpm db:seed
-
-KLM_STORE_BACKEND=postgres
-pnpm dev:api
-pnpm dev:mcp
+pnpm build
 pnpm eval
-```
-
-**Demo project UUIDs** — вывод `db:seed`. Используй в Cursor MCP и API headers.
-
----
-
-## Архитектура Phase 2
-
-```
-Client → Gateway → KlmRuntime
-                    ├── HybridMemoryActivator (rules + pgvector)
-                    ├── Verifier + Scorer
-                    ├── RealityCompiler.compile / compileStream
-                    ├── MemoryPipeline → PostgreSQL
-                    ├── SemanticMemoryIndexer → memory_chunks
-                    └── AuditLogger → audit_logs, model_calls
+pnpm eval:integration   # requires DATABASE_URL
 ```
 
 ---
@@ -63,5 +63,6 @@ Client → Gateway → KlmRuntime
 
 | Дата | Событие |
 |------|---------|
-| 2026-05-29 | Phase 1.5 persistence |
-| 2026-05-29 | Phase 2 product: semantic, audit, evals, streaming, docker |
+| 2026-05-29 | Phase 2 product |
+| 2026-05-29 | Phase 2.1 dedup + router audit + CI |
+| 2026-05-29 | Phase 2.1 fix: remove ModelRouter mutable call context |
