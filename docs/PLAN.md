@@ -18,7 +18,7 @@
 | 7 | OpenAI-compat: полная история messages → context | ✅ done | `core/conversation.ts`, `api/server.ts` |
 | 8 | Activator: recent events + recency | ✅ done | `memory-core/activator.ts` |
 | 9 | Streaming: model stream (fast_stream) | 🔄 partial | `KLM_STREAM_MODE=fast_stream` в runtime |
-| 10 | Push на GitHub | ⏳ pending | после коммита |
+| 10 | Push на GitHub | ✅ done | `084ed30` |
 
 **Легенда:** ✅ done · 🔄 in progress · ⏳ pending
 
