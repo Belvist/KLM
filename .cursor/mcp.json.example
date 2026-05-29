@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "klm-runtime": {
+      "command": "pnpm",
+      "args": ["--dir", "../klm-runtime/apps/mcp-server", "dev"],
+      "env": {
+        "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
+        "KLM_PROJECT_ID": "00000000-0000-4000-8000-000000000001",
+        "KLM_WORKSPACE_ID": "00000000-0000-4000-8000-000000000002",
+        "KLM_USER_ID": "00000000-0000-4000-8000-000000000003"
+      }
+    }
+  }
+}
