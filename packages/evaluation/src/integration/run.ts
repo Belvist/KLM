@@ -85,7 +85,7 @@ async function main(): Promise<void> {
 
     record(
       "seed-project-exists",
-      Boolean(state?.invariants?.length && state?.decisions?.length),
+      Boolean(state?.invariants?.length && state?.invariants.length >= 8 && state?.decisions?.length),
       state
         ? `invariants=${state.invariants.length} decisions=${state.decisions.length}`
         : "no project — run pnpm db:seed"

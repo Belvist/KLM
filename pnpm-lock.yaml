@@ -109,9 +109,15 @@ importers:
 
   packages/evaluation:
     dependencies:
+      '@klm/api':
+        specifier: workspace:*
+        version: link:../../apps/api
       '@klm/audit':
         specifier: workspace:*
         version: link:../audit
+      '@klm/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@klm/core':
         specifier: workspace:*
         version: link:../core

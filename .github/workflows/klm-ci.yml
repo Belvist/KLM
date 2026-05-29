@@ -57,3 +57,5 @@ jobs:
       - run: pnpm eval
 
       - run: pnpm eval:integration
+
+      - run: pnpm eval:e2e

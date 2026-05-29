@@ -7,10 +7,13 @@
     "build": "node -e \"process.exit(0)\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "eval": "node --import tsx src/run.ts",
-    "eval:integration": "node --import tsx src/integration/run.ts"
+    "eval:integration": "node --import tsx src/integration/run.ts",
+    "eval:e2e": "node --import tsx src/e2e/run.ts"
   },
   "dependencies": {
+    "@klm/api": "workspace:*",
     "@klm/audit": "workspace:*",
+    "@klm/bootstrap": "workspace:*",
     "@klm/core": "workspace:*",
     "@klm/memory-core": "workspace:*",
     "@klm/model-adapters": "workspace:*",
