@@ -23,7 +23,7 @@ pnpm dev:api    # Gateway on :3100
 pnpm dev:mcp    # MCP server for Cursor
 ```
 
-**Shared memory:** API and MCP use the same store via `KLM_STATE_PATH` (file, default `.klm-data/`) or `DATABASE_URL` (PostgreSQL). Set fixed `KLM_PROJECT_ID` in MCP config — do not use random UUIDs per start.
+**Shared memory (API + MCP):** use PostgreSQL (`docker compose up -d`, `pnpm db:migrate`, `KLM_STORE_BACKEND=postgres`). File store reloads from disk each operation but is **dev-only** for multi-process. Set fixed `KLM_PROJECT_ID` in MCP — not random per start.
 
 **Production tenancy:** `KLM_ENV=production` requires `X-KLM-Organization-Id`, `X-KLM-Workspace-Id`, `X-KLM-Project-Id`, `X-KLM-User-Id`.
 

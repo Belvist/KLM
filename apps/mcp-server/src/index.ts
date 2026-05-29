@@ -3,20 +3,25 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { createKlmApp } from "@klm/bootstrap";
-
-const { store, runtime } = await createKlmApp();
+import { createKlmApp, getKlmEnvironment } from "@klm/bootstrap";
 
 const PROJECT_ID = process.env.KLM_PROJECT_ID ?? "";
 const WORKSPACE_ID = process.env.KLM_WORKSPACE_ID ?? "";
 const USER_ID = process.env.KLM_USER_ID ?? "";
 const ORG_ID = process.env.KLM_ORGANIZATION_ID ?? "";
 
+const env = getKlmEnvironment();
 if (!PROJECT_ID || !WORKSPACE_ID || !USER_ID) {
-  console.error(
-    "KLM MCP requires KLM_PROJECT_ID, KLM_WORKSPACE_ID, KLM_USER_ID env vars (use fixed UUIDs, not random per start)"
-  );
+  const msg =
+    "KLM MCP requires KLM_PROJECT_ID, KLM_WORKSPACE_ID, KLM_USER_ID (fixed UUIDs, shared with API)";
+  if (env === "production") {
+    console.error(msg);
+    process.exit(1);
+  }
+  console.error(`[warn] ${msg} — using dev defaults`);
 }
+
+const { store, runtime } = await createKlmApp();
 
 const server = new McpServer({
   name: "klm-runtime",

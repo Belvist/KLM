@@ -53,24 +53,31 @@ export class LlmMemoryCompiler implements MemoryCompiler {
 }
 
 export class BasicMemoryUpdater implements MemoryUpdater {
+  /**
+   * User message is already saved in KlmRuntime.saveEvent().
+   * Here we only persist the assistant response as a separate event.
+   */
   async buildUpdate(params: {
     userInput: string;
     situation: Situation;
     output: string;
     projectState: ProjectState;
   }): Promise<MemoryUpdate> {
-    const now = new Date();
+    if (!params.output.trim()) {
+      return {};
+    }
+
     return {
       newEvents: [
         {
           id: randomUUID(),
           projectId: params.situation.projectId,
           userId: params.situation.userId,
-          type: "message",
-          content: params.userInput,
-          timestamp: now,
-          source: "chat",
-          importance: 0.5,
+          type: "feedback",
+          content: params.output,
+          timestamp: new Date(),
+          source: "system",
+          importance: 0.6,
         },
       ],
     };

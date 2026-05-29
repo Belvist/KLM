@@ -23,17 +23,15 @@ export async function createStateStore(options: CreateStoreOptions = {}): Promis
   const backend =
     options.backend ??
     (process.env.KLM_STORE_BACKEND as StoreBackend | undefined) ??
-    (process.env.DATABASE_URL ? "postgres" : "file");
+    (process.env.DATABASE_URL ? "postgres" : "file"); // file: dev single-process; postgres: API+MCP shared
 
   switch (backend) {
     case "postgres": {
       const url = options.databaseUrl ?? process.env.DATABASE_URL;
       if (!url) {
-        throw new Error("DATABASE_URL required for postgres store");
+        throw new Error("DATABASE_URL required for postgres store. Run: pnpm db:migrate");
       }
-      const store = new PostgreSQLStateStore(url);
-      await store.init();
-      sharedStore = store;
+      sharedStore = new PostgreSQLStateStore(url);
       break;
     }
     case "file": {

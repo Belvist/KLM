@@ -4,6 +4,7 @@ import { DecisionNodeSchema, InvariantSchema } from "@klm/core";
 import type { ModelRouter } from "@klm/model-adapters";
 import type { StateStore } from "@klm/state-store";
 import { BasicMemoryUpdater, LlmMemoryCompiler } from "./compiler.js";
+import { decisionAlreadyExists, invariantAlreadyExists } from "./dedup.js";
 
 export interface MemoryPipelineConfig {
   store: StateStore;
@@ -12,7 +13,7 @@ export interface MemoryPipelineConfig {
 }
 
 /**
- * event saved → compile → validate → persist
+ * event saved (user) → assistant event → compile → validate/dedup → persist
  */
 export class MemoryPipeline {
   private basicUpdater: BasicMemoryUpdater;
@@ -40,7 +41,12 @@ export class MemoryPipeline {
       projectState: params.projectState,
     });
 
-    await this.config.store.applyMemoryUpdate(params.projectId, baseUpdate);
+    if (baseUpdate.newEvents?.length) {
+      await this.config.store.applyMemoryUpdate(params.projectId, baseUpdate);
+    }
+
+    let currentState =
+      (await this.config.store.getProjectState(params.projectId)) ?? params.projectState;
 
     if (!this.llmCompiler) {
       return baseUpdate;
@@ -58,33 +64,39 @@ export class MemoryPipeline {
 
     if (compiled.decisions[0]) {
       const d = compiled.decisions[0];
-      memoryUpdate.newDecision = DecisionNodeSchema.parse({
-        id: randomUUID(),
-        projectId: params.projectId,
-        decision: d.decision ?? "Unnamed decision",
-        reason: d.reason ?? [],
-        rejectedAlternatives: d.rejectedAlternatives ?? [],
-        consequencesExpected: d.consequencesExpected ?? [],
-        consequencesObserved: [],
-        linkedFiles: d.linkedFiles ?? [],
-        linkedModules: d.linkedModules ?? [],
-        linkedRisks: d.linkedRisks ?? [],
-        status: "active",
-        createdAt: new Date(),
-      });
+      const decisionText = d.decision ?? "Unnamed decision";
+      if (!decisionAlreadyExists(currentState, decisionText)) {
+        memoryUpdate.newDecision = DecisionNodeSchema.parse({
+          id: randomUUID(),
+          projectId: params.projectId,
+          decision: decisionText,
+          reason: d.reason ?? [],
+          rejectedAlternatives: d.rejectedAlternatives ?? [],
+          consequencesExpected: d.consequencesExpected ?? [],
+          consequencesObserved: [],
+          linkedFiles: d.linkedFiles ?? [],
+          linkedModules: d.linkedModules ?? [],
+          linkedRisks: d.linkedRisks ?? [],
+          status: "active",
+          createdAt: new Date(),
+        });
+      }
     }
 
     if (compiled.invariants[0]) {
       const inv = compiled.invariants[0];
-      memoryUpdate.newInvariant = InvariantSchema.parse({
-        id: randomUUID(),
-        projectId: params.projectId,
-        rule: inv.rule ?? "Unnamed rule",
-        reason: inv.reason ?? "",
-        severity: inv.severity ?? "soft",
-        appliesTo: inv.appliesTo ?? [],
-        createdAt: new Date(),
-      });
+      const ruleText = inv.rule ?? "Unnamed rule";
+      if (!invariantAlreadyExists(currentState, ruleText)) {
+        memoryUpdate.newInvariant = InvariantSchema.parse({
+          id: randomUUID(),
+          projectId: params.projectId,
+          rule: ruleText,
+          reason: inv.reason ?? "",
+          severity: inv.severity ?? "soft",
+          appliesTo: inv.appliesTo ?? [],
+          createdAt: new Date(),
+        });
+      }
     }
 
     if (memoryUpdate.newDecision || memoryUpdate.newInvariant) {

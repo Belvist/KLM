@@ -21,8 +21,12 @@ export interface ModelRouterConfig {
 export class ModelRouter {
   private adapters: Map<ModelProviderId, ModelAdapter>;
   private routingPolicy: RoutingPolicy;
+  private defaultProvider?: ModelProviderId;
+  private defaultModel?: string;
 
   constructor(config: ModelRouterConfig = {}) {
+    this.defaultProvider = process.env.KLM_DEFAULT_PROVIDER as ModelProviderId | undefined;
+    this.defaultModel = process.env.KLM_DEFAULT_MODEL;
     this.routingPolicy = config.routingPolicy ?? {
       intent: "cheap-fast",
       memory_compression: "cheap-structured",
@@ -59,6 +63,11 @@ export class ModelRouter {
         return { provider: "openrouter", model: modelOverride };
       }
       return { provider: "openrouter", model: modelOverride };
+    }
+
+    if (this.defaultModel) {
+      const provider = this.defaultProvider ?? "openrouter";
+      return { provider, model: this.defaultModel };
     }
 
     const modelClass = this.routingPolicy[taskType] ?? "balanced";

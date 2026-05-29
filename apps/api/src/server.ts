@@ -37,9 +37,24 @@ app.get("/health", async () => ({
   store: process.env.DATABASE_URL ? "postgres" : process.env.KLM_STORE_BACKEND ?? "file",
 }));
 
+function assertProjectAccess(
+  tenantProjectId: string,
+  urlProjectId: string,
+  reply: import("fastify").FastifyReply
+): boolean {
+  if (tenantProjectId !== urlProjectId) {
+    reply.code(403).send({ error: "Forbidden: project does not match tenant context" });
+    return false;
+  }
+  return true;
+}
+
 app.post<{ Body: { input: string; model?: string; client?: ClientType } }>(
   "/v1/klm/completions",
-  async (request) => {
+  async (request, reply) => {
+    if (!request.body.input?.trim()) {
+      return reply.code(400).send({ error: "input is required" });
+    }
     const tenant = extractTenant(request.headers);
     const klmRequest: KlmRequest = {
       tenant,
@@ -67,6 +82,10 @@ app.post<{
   }));
 
   const input = lastUserMessage(messageHistory);
+  if (!input.trim()) {
+    return reply.code(400).send({ error: "messages must include a non-empty user message" });
+  }
+
   const klmRequest: KlmRequest = {
     tenant,
     client: "openai_compat",
@@ -128,19 +147,25 @@ app.post<{
   };
 });
 
-app.get("/v1/projects/:projectId/state", async (request) => {
+app.get("/v1/projects/:projectId/state", async (request, reply) => {
   const { projectId } = request.params as { projectId: string };
+  const tenant = extractTenant(request.headers);
+  if (!assertProjectAccess(tenant.projectId, projectId, reply)) return;
   const state = await store.getProjectState(projectId);
-  return state ?? { error: "Project not found" };
+  return state ?? reply.code(404).send({ error: "Project not found" });
 });
 
-app.get("/v1/projects/:projectId/decisions", async (request) => {
+app.get("/v1/projects/:projectId/decisions", async (request, reply) => {
   const { projectId } = request.params as { projectId: string };
+  const tenant = extractTenant(request.headers);
+  if (!assertProjectAccess(tenant.projectId, projectId, reply)) return;
   return store.getDecisions(projectId);
 });
 
-app.get("/v1/projects/:projectId/invariants", async (request) => {
+app.get("/v1/projects/:projectId/invariants", async (request, reply) => {
   const { projectId } = request.params as { projectId: string };
+  const tenant = extractTenant(request.headers);
+  if (!assertProjectAccess(tenant.projectId, projectId, reply)) return;
   return store.getInvariants(projectId);
 });
 

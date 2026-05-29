@@ -49,14 +49,14 @@ export class KlmRuntime {
       ? buildConversationContext(messageHistory)
       : [];
 
-    await this.saveEvent(projectId, userId, input, request.client);
-
-    const intent = await this.intentEngine.parse(input);
-
     let projectState = await this.config.store.getProjectState(projectId);
     if (!projectState) {
       projectState = await this.ensureProject(projectId, tenant.workspaceId);
     }
+
+    await this.saveEvent(projectId, userId, input, request.client);
+
+    const intent = await this.intentEngine.parse(input);
 
     const recentEvents = await this.config.store.getEvents(projectId, 20);
 
@@ -135,47 +135,15 @@ export class KlmRuntime {
   }
 
   /**
-   * fast_stream: streams from model when KLM_STREAM_MODE=fast_stream (Phase 1.5).
-   * default: buffered completion split into chunks (compatible with verifier-first path).
+   * Buffered stream: full KLM loop completes first, then output is chunked.
+   * True model streaming (stream during compile) is Phase 2.
    */
   async *handleRequestStream(
     request: KlmRequest
   ): AsyncIterable<{ type: "chunk" | "done"; content?: string; response?: KlmResponse }> {
-    const mode = process.env.KLM_STREAM_MODE ?? "buffered";
-
-    if (mode === "fast_stream") {
-      yield* this.streamFromModel(request);
-      return;
-    }
-
     const response = await this.handleRequest({ ...request, stream: false });
     for (const word of response.output.split(/(\s+)/)) {
       if (word) yield { type: "chunk", content: word };
-    }
-    yield { type: "done", response };
-  }
-
-  private async *streamFromModel(
-    request: KlmRequest
-  ): AsyncIterable<{ type: "chunk" | "done"; content?: string; response?: KlmResponse }> {
-    const response = await this.handleRequest({ ...request, stream: false });
-    const taskType = "general";
-    const messages = [
-      {
-        role: "system" as const,
-        content: "Continue the assistant response based on KLM analysis.",
-      },
-      { role: "user" as const, content: request.input },
-      { role: "assistant" as const, content: response.output.slice(0, 500) },
-    ];
-
-    for await (const chunk of this.config.router.stream(taskType, {
-      messages,
-      stream: true,
-      jsonMode: false,
-    })) {
-      if (chunk.content) yield { type: "chunk", content: chunk.content };
-      if (chunk.done) break;
     }
     yield { type: "done", response };
   }

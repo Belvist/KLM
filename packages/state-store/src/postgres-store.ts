@@ -1,7 +1,4 @@
 import { randomUUID } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import pg from "pg";
 import type {
   DecisionNode,
@@ -25,19 +22,9 @@ const { Pool } = pg;
 
 export class PostgreSQLStateStore implements StateStore {
   private pool: pg.Pool;
-  private migrated = false;
 
   constructor(connectionString: string) {
     this.pool = new Pool({ connectionString });
-  }
-
-  async init(): Promise<void> {
-    if (this.migrated) return;
-    const dir = dirname(fileURLToPath(import.meta.url));
-    const sqlPath = join(dir, "..", "..", "migrations", "001_init.sql");
-    const sql = await readFile(sqlPath, "utf-8");
-    await this.pool.query(sql);
-    this.migrated = true;
   }
 
   async close(): Promise<void> {
@@ -139,16 +126,33 @@ export class PostgreSQLStateStore implements StateStore {
     }
 
     if (update.newDecision) {
-      state.decisions = [...state.decisions, DecisionNodeSchema.parse(update.newDecision)];
+      const parsed = DecisionNodeSchema.parse(update.newDecision);
+      const exists = state.decisions.some(
+        (d) =>
+          d.status === "active" &&
+          d.decision.toLowerCase().trim() === parsed.decision.toLowerCase().trim()
+      );
+      if (!exists) {
+        state.decisions = [...state.decisions, parsed];
+      }
     }
+
     if (update.newInvariant) {
-      state.invariants = [...state.invariants, InvariantSchema.parse(update.newInvariant)];
+      const parsed = InvariantSchema.parse(update.newInvariant);
+      const exists = state.invariants.some(
+        (i) => i.rule.toLowerCase().trim() === parsed.rule.toLowerCase().trim()
+      );
+      if (!exists) {
+        state.invariants = [...state.invariants, parsed];
+      }
     }
+
     if (update.updatedRisk) {
       const idx = state.risks.findIndex((r) => r.id === update.updatedRisk!.id);
       if (idx >= 0) state.risks[idx] = update.updatedRisk;
       else state.risks.push(update.updatedRisk);
     }
+
     if (update.newEvents?.length) {
       for (const event of update.newEvents) {
         await this.appendEvent(event);

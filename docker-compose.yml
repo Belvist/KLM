@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: klm
+      POSTGRES_PASSWORD: klm
+      POSTGRES_DB: klm
+    ports:
+      - "5432:5432"
+    volumes:
+      - klm_pg_data:/var/lib/postgresql/data
+
+volumes:
+  klm_pg_data:
