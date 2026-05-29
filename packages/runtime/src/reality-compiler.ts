@@ -13,6 +13,8 @@ export interface CompileParams {
   intent: ParsedIntent;
   projectState: ProjectState;
   memoryContext: string;
+  requestId?: string;
+  projectId?: string;
 }
 
 export class RealityCompiler {
@@ -73,6 +75,8 @@ export class RealityCompiler {
       maxTokens: 8192,
       stream: true,
       jsonMode: false,
+      requestId: params.requestId,
+      projectId: params.projectId,
     })) {
       if (chunk.content) {
         yield chunk.content;

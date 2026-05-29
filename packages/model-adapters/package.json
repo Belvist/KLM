@@ -17,6 +17,7 @@
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
+    "@klm/audit": "workspace:*",
     "@klm/core": "workspace:*"
   },
   "devDependencies": {

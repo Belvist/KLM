@@ -24,7 +24,8 @@ export class CompositeVerifier implements Verifier {
   async verifyAndRepair(
     action: RankedAction,
     invariants: Invariant[],
-    projectState: ProjectState
+    projectState: ProjectState,
+    scope?: { requestId?: string; projectId?: string }
   ): Promise<VerifiedAction> {
     const violations: VerifiedAction["violations"] = [];
 
@@ -51,7 +52,7 @@ export class CompositeVerifier implements Verifier {
 
     let repairedOutput: string | undefined;
     if (violations.length && this.router) {
-      repairedOutput = await this.attemptRepair(action, violations, invariants);
+      repairedOutput = await this.attemptRepair(action, violations, invariants, scope);
     }
 
     return {
@@ -115,7 +116,8 @@ export class CompositeVerifier implements Verifier {
   private async attemptRepair(
     action: RankedAction,
     violations: VerifiedAction["violations"],
-    invariants: Invariant[]
+    invariants: Invariant[],
+    scope?: { requestId?: string; projectId?: string }
   ): Promise<string | undefined> {
     if (!this.router) return undefined;
 
@@ -136,6 +138,8 @@ export class CompositeVerifier implements Verifier {
         },
       ],
       maxTokens: 2048,
+      requestId: scope?.requestId,
+      projectId: scope?.projectId,
     });
 
     return response.content;

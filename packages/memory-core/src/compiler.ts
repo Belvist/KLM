@@ -13,7 +13,10 @@ Only extract if there is a clear architectural or project decision. Return {} if
 export class LlmMemoryCompiler implements MemoryCompiler {
   constructor(private router: ModelRouter) {}
 
-  async compileEvents(events: Event[]): Promise<{
+  async compileEvents(
+    events: Event[],
+    scope?: { requestId?: string; projectId?: string }
+  ): Promise<{
     episodes: string[];
     decisions: Array<Partial<import("@klm/core").DecisionNode>>;
     invariants: Array<Partial<import("@klm/core").Invariant>>;
@@ -33,6 +36,8 @@ export class LlmMemoryCompiler implements MemoryCompiler {
       ],
       jsonMode: true,
       maxTokens: 2048,
+      requestId: scope?.requestId,
+      projectId: scope?.projectId,
     });
 
     try {

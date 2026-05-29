@@ -57,6 +57,8 @@ export const ModelRequestSchema = z.object({
   maxTokens: z.number().int().positive().optional(),
   stream: z.boolean().default(false),
   jsonMode: z.boolean().default(false),
+  requestId: z.string().uuid().optional(),
+  projectId: z.string().uuid().optional(),
 });
 
 export type ModelRequest = z.infer<typeof ModelRequestSchema>;

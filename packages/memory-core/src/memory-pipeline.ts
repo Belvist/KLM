@@ -31,6 +31,7 @@ export class MemoryPipeline {
     output: string;
     projectId: string;
     userId: string;
+    requestId?: string;
     projectState: ProjectState;
     situation: import("@klm/core").Situation;
   }): Promise<MemoryUpdate> {
@@ -55,7 +56,10 @@ export class MemoryPipeline {
     let compiled: Awaited<ReturnType<LlmMemoryCompiler["compileEvents"]>>;
     try {
       const events = await this.config.store.getEvents(params.projectId, 30);
-      compiled = await this.llmCompiler.compileEvents(events);
+      compiled = await this.llmCompiler.compileEvents(events, {
+        requestId: params.requestId,
+        projectId: params.projectId,
+      });
     } catch {
       return baseUpdate;
     }

@@ -20,12 +20,14 @@ export async function createKlmApp(): Promise<KlmApp> {
   if (appInstance) return appInstance;
 
   const store = await createStateStore();
-  const router = new ModelRouter();
   const audit = createAuditLogger(process.env.DATABASE_URL);
+  const router = new ModelRouter({ audit });
 
   const databaseUrl = process.env.DATABASE_URL;
   const semanticEnabled =
-    process.env.KLM_SEMANTIC_MEMORY !== "false" && Boolean(databaseUrl);
+    process.env.KLM_SEMANTIC_MEMORY === "true" &&
+    Boolean(databaseUrl) &&
+    Boolean(process.env.OPENAI_API_KEY);
 
   let runtime: KlmRuntime;
 

@@ -16,7 +16,10 @@ const INTENT_SYSTEM_PROMPT = `Classify the user request. Return JSON:
 export class IntentEngine {
   constructor(private router?: ModelRouter) {}
 
-  async parse(rawInput: string): Promise<ParsedIntent> {
+  async parse(
+    rawInput: string,
+    scope?: { requestId?: string; projectId?: string }
+  ): Promise<ParsedIntent> {
     if (this.router) {
       try {
         const response = await this.router.generate("intent", {
@@ -26,6 +29,8 @@ export class IntentEngine {
           ],
           jsonMode: true,
           maxTokens: 512,
+          requestId: scope?.requestId,
+          projectId: scope?.projectId,
         });
         const parsed = JSON.parse(response.content);
         return IntentSchema.parse({ ...parsed, rawInput });

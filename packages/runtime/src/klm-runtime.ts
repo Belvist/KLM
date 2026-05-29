@@ -67,6 +67,12 @@ export class KlmRuntime {
   async *handleRequestStream(
     request: KlmRequest
   ): AsyncIterable<{ type: "chunk" | "done"; content?: string; response?: KlmResponse }> {
+    yield* this.handleRequestStreamInner(request);
+  }
+
+  private async *handleRequestStreamInner(
+    request: KlmRequest
+  ): AsyncIterable<{ type: "chunk" | "done"; content?: string; response?: KlmResponse }> {
     const ctx = await this.prepareContext(request);
     let fullContent = "";
 
@@ -76,6 +82,8 @@ export class KlmRuntime {
       intent: ctx.intent,
       projectState: ctx.projectState,
       memoryContext: ctx.memoryContext.contextSummary,
+      requestId: request.tenant.requestId,
+      projectId: ctx.projectId,
     })) {
       fullContent += chunk;
       yield { type: "chunk", content: chunk };
@@ -93,6 +101,7 @@ export class KlmRuntime {
       output: fullContent,
       projectId: ctx.projectId,
       userId: ctx.userId,
+      requestId: request.tenant.requestId,
       projectState: ctx.projectState,
       situation: ctx.situation,
     });
@@ -128,6 +137,10 @@ export class KlmRuntime {
     request: KlmRequest,
     _options: { stream: boolean }
   ): Promise<KlmResponse> {
+    return this.executeLoopInner(request);
+  }
+
+  private async executeLoopInner(request: KlmRequest): Promise<KlmResponse> {
     const ctx = await this.prepareContext(request);
 
     const compiled = await this.compiler.compile({
@@ -136,6 +149,8 @@ export class KlmRuntime {
       intent: ctx.intent,
       projectState: ctx.projectState,
       memoryContext: ctx.memoryContext.contextSummary,
+      requestId: request.tenant.requestId,
+      projectId: ctx.projectId,
     });
 
     await this.memoryPipeline.afterResponse({
@@ -143,6 +158,7 @@ export class KlmRuntime {
       output: compiled.content,
       projectId: ctx.projectId,
       userId: ctx.userId,
+      requestId: request.tenant.requestId,
       projectState: ctx.projectState,
       situation: ctx.situation,
     });
@@ -175,6 +191,10 @@ export class KlmRuntime {
     const { tenant, input, messageHistory } = request;
     const projectId = tenant.projectId;
     const userId = tenant.userId;
+    const modelScope = {
+      requestId: tenant.requestId,
+      projectId: tenant.projectId,
+    };
 
     const recentContext = messageHistory?.length
       ? buildConversationContext(messageHistory)
@@ -187,7 +207,7 @@ export class KlmRuntime {
 
     await this.saveEvent(projectId, userId, input, request.client);
 
-    const intent = await this.intentEngine.parse(input);
+    const intent = await this.intentEngine.parse(input, modelScope);
     const recentEvents = await this.config.store.getEvents(projectId, 20);
 
     const situation: Situation = {
@@ -227,7 +247,8 @@ export class KlmRuntime {
     const verified = await this.verifier.verifyAndRepair(
       ranked[0],
       projectState.invariants,
-      projectState
+      projectState,
+      modelScope
     );
 
     await this.audit?.log(
