@@ -144,7 +144,10 @@ async function main(): Promise<void> {
     const auditLogger = new PostgresAuditLogger(DATABASE_URL);
     const router = new ModelRouter({
       audit: auditLogger,
-      adapters: { openai: new MockAdapter() },
+      adapters: {
+        openai: new MockAdapter(),
+        openrouter: new MockAdapter(),
+      },
     });
 
     await router.generate("intent", {

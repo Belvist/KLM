@@ -9,5 +9,4 @@ WHERE a.id > b.id
   AND a.source_id IS NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS uniq_memory_chunk_source
-ON memory_chunks (project_id, chunk_type, source_id)
-WHERE source_id IS NOT NULL;
+ON memory_chunks (project_id, chunk_type, source_id);

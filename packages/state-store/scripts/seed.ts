@@ -135,9 +135,9 @@ const projectState = {
     rootPath: ".",
     fileCount: 120,
     modules: [
-      { path: "packages/runtime", role: "KlmRuntime reasoning loop" },
-      { path: "apps/api", role: "HTTP gateway" },
-      { path: "apps/mcp-server", role: "MCP IDE client" },
+      { path: "packages/runtime", purpose: "KlmRuntime reasoning loop" },
+      { path: "apps/api", purpose: "HTTP gateway" },
+      { path: "apps/mcp-server", purpose: "MCP IDE client" },
     ],
   },
   updatedAt: new Date().toISOString(),
