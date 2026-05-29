@@ -23,22 +23,53 @@ export class PgVectorMemoryIndex {
     await this.pool.end();
   }
 
+  /**
+   * Upsert by (project_id, chunk_type, source_id). Requires source_id for dedup.
+   */
   async upsertChunk(params: {
     projectId: string;
     chunkType: MemoryChunkType;
-    sourceId?: string;
+    sourceId: string;
     content: string;
     embedding: number[];
+    metadata?: Record<string, unknown>;
   }): Promise<void> {
     const id = randomUUID();
     const vectorLiteral = `[${params.embedding.join(",")}]`;
 
     await this.pool.query(
-      `INSERT INTO memory_chunks (id, project_id, chunk_type, source_id, content, embedding)
-       VALUES ($1, $2, $3, $4, $5, $6::vector)
-       ON CONFLICT (id) DO NOTHING`,
-      [id, params.projectId, params.chunkType, params.sourceId ?? null, params.content, vectorLiteral]
+      `INSERT INTO memory_chunks (id, project_id, chunk_type, source_id, content, embedding, metadata)
+       VALUES ($1, $2, $3, $4, $5, $6::vector, $7::jsonb)
+       ON CONFLICT (project_id, chunk_type, source_id)
+       DO UPDATE SET
+         content = EXCLUDED.content,
+         embedding = EXCLUDED.embedding,
+         metadata = EXCLUDED.metadata`,
+      [
+        id,
+        params.projectId,
+        params.chunkType,
+        params.sourceId,
+        params.content,
+        vectorLiteral,
+        JSON.stringify(params.metadata ?? {}),
+      ]
     );
+  }
+
+  async countChunks(projectId: string, sourceId?: string): Promise<number> {
+    if (sourceId) {
+      const res = await this.pool.query(
+        `SELECT COUNT(*)::int AS c FROM memory_chunks WHERE project_id = $1 AND source_id = $2`,
+        [projectId, sourceId]
+      );
+      return res.rows[0]?.c ?? 0;
+    }
+    const res = await this.pool.query(
+      `SELECT COUNT(*)::int AS c FROM memory_chunks WHERE project_id = $1`,
+      [projectId]
+    );
+    return res.rows[0]?.c ?? 0;
   }
 
   async search(params: {
@@ -82,12 +113,15 @@ export class PgVectorMemoryIndex {
     projectId: string;
     items: Array<{
       chunkType: MemoryChunkType;
-      sourceId?: string;
+      sourceId: string;
       content: string;
       embedding: number[];
     }>;
   }): Promise<void> {
     for (const item of params.items) {
+      if (!item.sourceId) {
+        throw new Error("sourceId is required for memory chunk indexing");
+      }
       await this.upsertChunk({
         projectId: params.projectId,
         ...item,

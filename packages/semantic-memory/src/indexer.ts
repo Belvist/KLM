@@ -11,7 +11,7 @@ export class SemanticMemoryIndexer {
   async indexProjectState(projectId: string, state: ProjectState): Promise<void> {
     const items: Array<{
       chunkType: import("./pgvector-index.js").MemoryChunkType;
-      sourceId?: string;
+      sourceId: string;
       content: string;
       embedding: number[];
     }> = [];
