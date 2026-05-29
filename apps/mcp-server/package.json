@@ -13,10 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@klm/core": "workspace:*",
-    "@klm/model-adapters": "workspace:*",
-    "@klm/runtime": "workspace:*",
-    "@klm/state-store": "workspace:*",
+    "@klm/bootstrap": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.1",
     "zod": "^3.24.2"
   },

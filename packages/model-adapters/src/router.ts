@@ -111,7 +111,8 @@ export class ModelRouter {
 
   async *stream(
     taskType: ReasoningTaskType,
-    request: Omit<ModelRequest, "taskType">,
+    request: Omit<ModelRequest, "taskType" | "stream" | "jsonMode"> &
+      Partial<Pick<ModelRequest, "stream" | "jsonMode">>,
     options?: { modelOverride?: string }
   ): AsyncIterable<import("@klm/core").ModelChunk> {
     const { provider, model } = this.resolveRoute(
@@ -119,6 +120,12 @@ export class ModelRouter {
       options?.modelOverride
     );
     const adapter = this.getAdapter(provider);
-    yield* adapter.stream({ ...request, taskType, model });
+    yield* adapter.stream({
+      stream: true,
+      jsonMode: false,
+      ...request,
+      taskType,
+      model,
+    });
   }
 }

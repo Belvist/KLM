@@ -10,10 +10,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@klm/bootstrap": "workspace:*",
     "@klm/core": "workspace:*",
-    "@klm/model-adapters": "workspace:*",
-    "@klm/runtime": "workspace:*",
-    "@klm/state-store": "workspace:*",
     "fastify": "^5.2.1"
   },
   "devDependencies": {

@@ -1,5 +1,5 @@
 {
-  "name": "@klm/memory-core",
+  "name": "@klm/bootstrap",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -13,16 +13,15 @@
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test src/**/*.test.ts"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@klm/core": "workspace:*",
     "@klm/model-adapters": "workspace:*",
+    "@klm/runtime": "workspace:*",
     "@klm/state-store": "workspace:*"
   },
   "devDependencies": {
-    "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }
 }

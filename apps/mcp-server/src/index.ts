@@ -3,26 +3,38 @@ import { randomUUID } from "node:crypto";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { ModelRouter } from "@klm/model-adapters";
-import { KlmRuntime } from "@klm/runtime";
-import { InMemoryStateStore } from "@klm/state-store";
+import { createKlmApp } from "@klm/bootstrap";
 
-const store = new InMemoryStateStore();
-const router = new ModelRouter();
-const runtime = new KlmRuntime({ store, router });
+const { store, runtime } = await createKlmApp();
 
-const PROJECT_ID = process.env.KLM_PROJECT_ID ?? randomUUID();
-const WORKSPACE_ID = process.env.KLM_WORKSPACE_ID ?? randomUUID();
-const USER_ID = process.env.KLM_USER_ID ?? randomUUID();
-const ORG_ID = process.env.KLM_ORGANIZATION_ID ?? randomUUID();
+const PROJECT_ID = process.env.KLM_PROJECT_ID ?? "";
+const WORKSPACE_ID = process.env.KLM_WORKSPACE_ID ?? "";
+const USER_ID = process.env.KLM_USER_ID ?? "";
+const ORG_ID = process.env.KLM_ORGANIZATION_ID ?? "";
+
+if (!PROJECT_ID || !WORKSPACE_ID || !USER_ID) {
+  console.error(
+    "KLM MCP requires KLM_PROJECT_ID, KLM_WORKSPACE_ID, KLM_USER_ID env vars (use fixed UUIDs, not random per start)"
+  );
+}
 
 const server = new McpServer({
   name: "klm-runtime",
   version: "0.1.0",
 });
 
+function tenant() {
+  return {
+    organizationId: ORG_ID || "00000000-0000-4000-8000-000000000001",
+    workspaceId: WORKSPACE_ID || "00000000-0000-4000-8000-000000000002",
+    projectId: PROJECT_ID || "00000000-0000-4000-8000-000000000003",
+    userId: USER_ID || "00000000-0000-4000-8000-000000000004",
+    requestId: randomUUID(),
+  };
+}
+
 server.resource("project-state", "project://state", async () => {
-  const state = await store.getProjectState(PROJECT_ID);
+  const state = await store.getProjectState(tenant().projectId);
   return {
     contents: [
       {
@@ -35,7 +47,7 @@ server.resource("project-state", "project://state", async () => {
 });
 
 server.resource("project-decisions", "project://decisions", async () => {
-  const decisions = await store.getDecisions(PROJECT_ID);
+  const decisions = await store.getDecisions(tenant().projectId);
   return {
     contents: [
       {
@@ -48,7 +60,7 @@ server.resource("project-decisions", "project://decisions", async () => {
 });
 
 server.resource("project-invariants", "project://invariants", async () => {
-  const invariants = await store.getInvariants(PROJECT_ID);
+  const invariants = await store.getInvariants(tenant().projectId);
   return {
     contents: [
       {
@@ -66,25 +78,14 @@ server.tool(
   { input: z.string().describe("Task description") },
   async ({ input }) => {
     const response = await runtime.handleRequest({
-      tenant: {
-        organizationId: ORG_ID,
-        workspaceId: WORKSPACE_ID,
-        projectId: PROJECT_ID,
-        userId: USER_ID,
-        requestId: randomUUID(),
-      },
+      tenant: tenant(),
       client: "mcp",
       input,
       stream: false,
     });
 
     return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify(response, null, 2),
-        },
-      ],
+      content: [{ type: "text" as const, text: JSON.stringify(response, null, 2) }],
     };
   }
 );
@@ -94,17 +95,19 @@ server.tool(
   "Get activated project memory: decisions, invariants, state",
   {},
   async () => {
-    const [state, decisions, invariants] = await Promise.all([
-      store.getProjectState(PROJECT_ID),
-      store.getDecisions(PROJECT_ID),
-      store.getInvariants(PROJECT_ID),
+    const pid = tenant().projectId;
+    const [state, decisions, invariants, events] = await Promise.all([
+      store.getProjectState(pid),
+      store.getDecisions(pid),
+      store.getInvariants(pid),
+      store.getEvents(pid, 20),
     ]);
 
     return {
       content: [
         {
           type: "text" as const,
-          text: JSON.stringify({ state, decisions, invariants }, null, 2),
+          text: JSON.stringify({ state, decisions, invariants, recentEvents: events }, null, 2),
         },
       ],
     };
@@ -114,11 +117,9 @@ server.tool(
 server.tool(
   "klm_verify_code",
   "Verify code or architecture against project invariants",
-  {
-    content: z.string().describe("Code or architecture to verify"),
-  },
+  { content: z.string().describe("Code or architecture to verify") },
   async ({ content }) => {
-    const invariants = await store.getInvariants(PROJECT_ID);
+    const invariants = await store.getInvariants(tenant().projectId);
     const violations = invariants
       .filter((inv) => {
         const lower = content.toLowerCase();
@@ -140,44 +141,24 @@ server.tool(
   }
 );
 
-server.prompt(
-  "klm-plan",
-  "Create an implementation plan using KLM project memory",
-  { task: z.string().optional() },
-  ({ task }) => ({
-    messages: [
-      {
-        role: "user" as const,
-        content: {
-          type: "text" as const,
-          text: `Plan the following task using KLM project state, decisions, and invariants:\n${task ?? ""}`,
-        },
+server.prompt("klm-plan", "Create an implementation plan using KLM project memory", {
+  task: z.string().optional(),
+}, ({ task }) => ({
+  messages: [
+    {
+      role: "user" as const,
+      content: {
+        type: "text" as const,
+        text: `Plan using KLM project state:\n${task ?? ""}`,
       },
-    ],
-  })
-);
-
-server.prompt(
-  "klm-implement",
-  "Implement with KLM production-grade standards",
-  { task: z.string().optional() },
-  ({ task }) => ({
-    messages: [
-      {
-        role: "user" as const,
-        content: {
-          type: "text" as const,
-          text: `Implement with architecture check, tests, observability:\n${task ?? ""}`,
-        },
-      },
-    ],
-  })
-);
+    },
+  ],
+}));
 
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("KLM MCP Server running on stdio");
+  console.error("KLM MCP Server running (shared store with API via KLM_STATE_PATH / DATABASE_URL)");
 }
 
 main().catch((err) => {

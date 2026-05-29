@@ -17,9 +17,11 @@
     "test": "node --import tsx --test src/**/*.test.ts"
   },
   "dependencies": {
-    "@klm/core": "workspace:*"
+    "@klm/core": "workspace:*",
+    "pg": "^8.14.1"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.11",
     "tsx": "^4.19.3",
     "typescript": "^5.8.2"
   }

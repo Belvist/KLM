@@ -31,6 +31,7 @@ export class OpenAIAdapter extends BaseModelAdapter {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        ...this.config.extraHeaders,
       },
       body: JSON.stringify({
         model,
@@ -79,6 +80,7 @@ export class OpenAIAdapter extends BaseModelAdapter {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
+        ...this.config.extraHeaders,
       },
       body: JSON.stringify({
         model,

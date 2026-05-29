@@ -11,6 +11,8 @@ export interface ModelAdapterConfig {
   apiKey?: string;
   baseUrl?: string;
   defaultModel?: string;
+  /** Extra HTTP headers (e.g. OpenRouter HTTP-Referer, X-Title) */
+  extraHeaders?: Record<string, string>;
 }
 
 export interface ModelAdapter {

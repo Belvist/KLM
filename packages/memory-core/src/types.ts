@@ -34,7 +34,8 @@ export interface MemoryActivator {
   activate(
     situation: Situation,
     projectState: ProjectState,
-    memoryTypes: MemoryType[]
+    memoryTypes: MemoryType[],
+    recentEvents?: import("@klm/core").Event[]
   ): Promise<ActivatedMemory>;
 }
 

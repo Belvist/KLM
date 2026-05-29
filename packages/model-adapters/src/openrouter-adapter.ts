@@ -9,17 +9,21 @@ export class OpenRouterAdapter extends OpenAIAdapter {
   readonly providerId: import("@klm/core").ModelProviderId = "openrouter";
 
   constructor(config: { apiKey?: string; defaultModel?: string } = {}) {
+    const apiKey = config.apiKey ?? process.env.OPENROUTER_API_KEY;
     super({
-      ...config,
+      apiKey,
       baseUrl: "https://openrouter.ai/api/v1",
       defaultModel: config.defaultModel ?? "anthropic/claude-sonnet-4",
+      extraHeaders: {
+        "HTTP-Referer": process.env.KLM_APP_URL ?? process.env.APP_URL ?? "https://github.com/Belvist/KLM",
+        "X-Title": process.env.KLM_APP_NAME ?? "KLM Runtime",
+      },
     });
   }
 
   override async generate(input: ModelRequest): Promise<ModelResponse> {
-    const apiKey = this.config.apiKey ?? process.env.OPENROUTER_API_KEY;
-    if (!apiKey) {
-      throw new Error("OpenRouter API key not configured");
+    if (!this.config.apiKey) {
+      throw new Error("OpenRouter API key not configured (OPENROUTER_API_KEY)");
     }
 
     const response = await super.generate({
@@ -27,9 +31,6 @@ export class OpenRouterAdapter extends OpenAIAdapter {
       model: input.model ?? this.config.defaultModel,
     });
 
-    return {
-      ...response,
-      provider: "openrouter",
-    };
+    return { ...response, provider: "openrouter" };
   }
 }

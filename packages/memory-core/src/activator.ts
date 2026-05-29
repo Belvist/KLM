@@ -1,11 +1,12 @@
-import type { ProjectState, Situation } from "@klm/core";
+import type { Event, ProjectState, Situation } from "@klm/core";
 import type { ActivatedMemory, MemoryActivator, MemoryType } from "./types.js";
 
 export class RuleBasedMemoryActivator implements MemoryActivator {
   async activate(
     situation: Situation,
     projectState: ProjectState,
-    memoryTypes: MemoryType[]
+    memoryTypes: MemoryType[],
+    recentEvents: Event[] = []
   ): Promise<ActivatedMemory> {
     const activeDecisions = memoryTypes.includes("decisions")
       ? projectState.decisions.filter((d) => d.status === "active")
@@ -17,10 +18,31 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
 
     const risks = memoryTypes.includes("risks") ? projectState.risks : [];
 
-    const relevantDecisions = this.filterByIntent(activeDecisions, situation.intent.rawInput);
-    const relevantInvariants = this.filterByIntent(invariants, situation.intent.rawInput);
+    const queryText = [
+      situation.intent.rawInput,
+      ...situation.recentContext,
+    ].join(" ");
+
+    const relevantDecisions = this.filterByRelevance(activeDecisions, queryText, "decision");
+    const relevantInvariants = this.filterByRelevance(invariants, queryText, "rule");
 
     const contextParts: string[] = [];
+
+    if (situation.recentContext.length) {
+      contextParts.push(
+        "Recent conversation:\n" + situation.recentContext.slice(-12).join("\n")
+      );
+    }
+
+    if (recentEvents.length) {
+      contextParts.push(
+        "Recent events:\n" +
+          recentEvents
+            .slice(-8)
+            .map((e) => `- [${e.type}] ${e.content.slice(0, 200)}`)
+            .join("\n")
+      );
+    }
 
     if (projectState.goals.length) {
       contextParts.push(`Goals: ${projectState.goals.join("; ")}`);
@@ -58,7 +80,7 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
       decisions: relevantDecisions,
       invariants: relevantInvariants,
       risks,
-      recentEvents: [],
+      recentEvents,
       principles: projectState.decisions
         .filter((d) => d.status === "active")
         .slice(0, 5)
@@ -67,16 +89,24 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
     };
   }
 
-  private filterByIntent<T extends { decision?: string; rule?: string }>(
+  private filterByRelevance<T extends { decision?: string; rule?: string }>(
     items: T[],
-    input: string
+    queryText: string,
+    field: "decision" | "rule"
   ): T[] {
-    const tokens = input.toLowerCase().split(/\s+/).filter((t) => t.length > 3);
-    if (!tokens.length) return items;
+    const tokens = queryText.toLowerCase().split(/\s+/).filter((t) => t.length > 3);
+    if (!tokens.length) return items.slice(0, 10);
 
-    return items.filter((item) => {
-      const text = (item.decision ?? item.rule ?? "").toLowerCase();
-      return tokens.some((t) => text.includes(t)) || items.length <= 10;
-    }).slice(0, 10);
+    const scored = items.map((item) => {
+      const text = (item[field] ?? "").toLowerCase();
+      const matchCount = tokens.filter((t) => text.includes(t)).length;
+      return { item, score: matchCount };
+    });
+
+    return scored
+      .filter((s) => s.score > 0 || items.length <= 5)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+      .map((s) => s.item);
   }
 }

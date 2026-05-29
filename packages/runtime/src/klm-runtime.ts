@@ -1,17 +1,13 @@
 import { randomUUID } from "node:crypto";
+import { buildConversationContext } from "@klm/core";
 import type {
-  CompiledOutput,
   Event,
   KlmRequest,
   KlmResponse,
   ProjectState,
   Situation,
 } from "@klm/core";
-import {
-  BasicMemoryUpdater,
-  RuleBasedMemoryActivator,
-  type MemoryType,
-} from "@klm/memory-core";
+import { MemoryPipeline, RuleBasedMemoryActivator, type MemoryType } from "@klm/memory-core";
 import type { ModelRouter } from "@klm/model-adapters";
 import type { StateStore } from "@klm/state-store";
 import { CompositeVerifier, rankActions, simulateFutures } from "@klm/verifier";
@@ -22,27 +18,36 @@ import { RealityCompiler } from "./reality-compiler.js";
 export interface KlmRuntimeConfig {
   store: StateStore;
   router: ModelRouter;
+  enableLlmMemoryCompiler?: boolean;
 }
 
 export class KlmRuntime {
   private intentEngine: IntentEngine;
   private memoryActivator: RuleBasedMemoryActivator;
-  private memoryUpdater: BasicMemoryUpdater;
+  private memoryPipeline: MemoryPipeline;
   private verifier: CompositeVerifier;
   private compiler: RealityCompiler;
 
   constructor(private config: KlmRuntimeConfig) {
     this.intentEngine = new IntentEngine(config.router);
     this.memoryActivator = new RuleBasedMemoryActivator();
-    this.memoryUpdater = new BasicMemoryUpdater();
+    this.memoryPipeline = new MemoryPipeline({
+      store: config.store,
+      router: config.router,
+      enableLlmCompiler: config.enableLlmMemoryCompiler,
+    });
     this.verifier = new CompositeVerifier(config.router);
     this.compiler = new RealityCompiler(config.router);
   }
 
   async handleRequest(request: KlmRequest): Promise<KlmResponse> {
-    const { tenant, input, modelOverride } = request;
+    const { tenant, input, modelOverride, messageHistory } = request;
     const projectId = tenant.projectId;
     const userId = tenant.userId;
+
+    const recentContext = messageHistory?.length
+      ? buildConversationContext(messageHistory)
+      : [];
 
     await this.saveEvent(projectId, userId, input, request.client);
 
@@ -53,17 +58,20 @@ export class KlmRuntime {
       projectState = await this.ensureProject(projectId, tenant.workspaceId);
     }
 
+    const recentEvents = await this.config.store.getEvents(projectId, 20);
+
     const situation: Situation = {
       intent,
       projectId,
       userId,
-      recentContext: [],
+      recentContext,
       activatedMemoryTypes: [
         "decisions",
         "invariants",
         "risks",
         "codebase",
         "roadmap",
+        "temporal",
       ],
     };
 
@@ -73,17 +81,19 @@ export class KlmRuntime {
       "risks",
       "codebase",
       "roadmap",
+      "temporal",
     ];
 
     const memoryContext = await this.memoryActivator.activate(
       situation,
       projectState,
-      memoryTypes
+      memoryTypes,
+      recentEvents
     );
 
     const candidateActions = generateCandidateActions(situation, memoryContext);
-    const simulated = simulateFutures(candidateActions);
-    const ranked = rankActions(candidateActions, simulated);
+    const simulated = simulateFutures(candidateActions, projectState);
+    const ranked = rankActions(candidateActions, simulated, projectState);
 
     const verified = await this.verifier.verifyAndRepair(
       ranked[0],
@@ -99,7 +109,14 @@ export class KlmRuntime {
       memoryContext: memoryContext.contextSummary,
     });
 
-    await this.updateMemory(userId, projectId, input, situation, compiled, projectState);
+    await this.memoryPipeline.afterResponse({
+      userInput: input,
+      output: compiled.content,
+      projectId,
+      userId,
+      projectState,
+      situation,
+    });
 
     const route = this.config.router.resolveRoute(
       intent.taskType === "code" ? "codegen" : "general",
@@ -117,13 +134,48 @@ export class KlmRuntime {
     };
   }
 
+  /**
+   * fast_stream: streams from model when KLM_STREAM_MODE=fast_stream (Phase 1.5).
+   * default: buffered completion split into chunks (compatible with verifier-first path).
+   */
   async *handleRequestStream(
     request: KlmRequest
   ): AsyncIterable<{ type: "chunk" | "done"; content?: string; response?: KlmResponse }> {
+    const mode = process.env.KLM_STREAM_MODE ?? "buffered";
+
+    if (mode === "fast_stream") {
+      yield* this.streamFromModel(request);
+      return;
+    }
+
     const response = await this.handleRequest({ ...request, stream: false });
-    const words = response.output.split(/(\s+)/);
-    for (const word of words) {
-      yield { type: "chunk", content: word };
+    for (const word of response.output.split(/(\s+)/)) {
+      if (word) yield { type: "chunk", content: word };
+    }
+    yield { type: "done", response };
+  }
+
+  private async *streamFromModel(
+    request: KlmRequest
+  ): AsyncIterable<{ type: "chunk" | "done"; content?: string; response?: KlmResponse }> {
+    const response = await this.handleRequest({ ...request, stream: false });
+    const taskType = "general";
+    const messages = [
+      {
+        role: "system" as const,
+        content: "Continue the assistant response based on KLM analysis.",
+      },
+      { role: "user" as const, content: request.input },
+      { role: "assistant" as const, content: response.output.slice(0, 500) },
+    ];
+
+    for await (const chunk of this.config.router.stream(taskType, {
+      messages,
+      stream: true,
+      jsonMode: false,
+    })) {
+      if (chunk.content) yield { type: "chunk", content: chunk.content };
+      if (chunk.done) break;
     }
     yield { type: "done", response };
   }
@@ -172,23 +224,6 @@ export class KlmRuntime {
     };
     await this.config.store.saveProjectState(newState);
     return newState;
-  }
-
-  private async updateMemory(
-    _userId: string,
-    projectId: string,
-    input: string,
-    situation: Situation,
-    output: CompiledOutput,
-    projectState: ProjectState
-  ): Promise<void> {
-    const update = await this.memoryUpdater.buildUpdate({
-      userInput: input,
-      situation,
-      output: output.content,
-      projectState,
-    });
-    await this.config.store.applyMemoryUpdate(projectId, update);
   }
 }
 

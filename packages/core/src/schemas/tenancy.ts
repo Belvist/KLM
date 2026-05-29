@@ -92,10 +92,18 @@ export const ClientTypeSchema = z.enum([
 
 export type ClientType = z.infer<typeof ClientTypeSchema>;
 
+export const ConversationMessageSchema = z.object({
+  role: z.enum(["system", "user", "assistant", "tool"]),
+  content: z.string(),
+});
+
+export type ConversationMessage = z.infer<typeof ConversationMessageSchema>;
+
 export const KlmRequestSchema = z.object({
   tenant: TenantContextSchema,
   client: ClientTypeSchema,
   input: z.string(),
+  messageHistory: z.array(ConversationMessageSchema).optional(),
   conversationId: z.string().uuid().optional(),
   modelOverride: z.string().optional(),
   stream: z.boolean().default(false),

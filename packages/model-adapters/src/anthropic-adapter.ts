@@ -6,16 +6,15 @@ export class AnthropicAdapter extends OpenAIAdapter {
 
   constructor(config: { apiKey?: string; defaultModel?: string } = {}) {
     super({
-      ...config,
+      apiKey: config.apiKey ?? process.env.ANTHROPIC_API_KEY,
       baseUrl: "https://api.anthropic.com/v1",
       defaultModel: config.defaultModel ?? "claude-sonnet-4-20250514",
     });
   }
 
   override async generate(input: ModelRequest): Promise<ModelResponse> {
-    const apiKey = this.config.apiKey ?? process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) {
-      throw new Error("Anthropic API key not configured");
+    if (!this.config.apiKey) {
+      throw new Error("Anthropic API key not configured (ANTHROPIC_API_KEY)");
     }
 
     const response = await super.generate(input);

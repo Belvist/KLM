@@ -1,34 +1,16 @@
 import { randomUUID } from "node:crypto";
 import Fastify from "fastify";
-import type { ClientType, KlmRequest, TenantContext } from "@klm/core";
-import { ModelRouter } from "@klm/model-adapters";
-import { KlmRuntime } from "@klm/runtime";
-import { InMemoryStateStore } from "@klm/state-store";
+import { createKlmApp, extractTenant, TenantValidationError } from "@klm/bootstrap";
+import type { ClientType, ConversationMessage, KlmRequest } from "@klm/core";
+import { buildConversationContext, lastUserMessage } from "@klm/core";
 
 const PORT = Number(process.env.KLM_PORT ?? 3100);
 const HOST = process.env.KLM_HOST ?? "0.0.0.0";
 const API_KEY = process.env.KLM_API_KEY ?? "klm_dev_key_change_me";
 
-const store = new InMemoryStateStore();
-const router = new ModelRouter();
-const runtime = new KlmRuntime({ store, router });
+const { store, runtime } = await createKlmApp();
 
 const app = Fastify({ logger: true });
-
-function extractTenant(headers: Record<string, string | string[] | undefined>): TenantContext {
-  const orgId = (headers["x-klm-organization-id"] as string) ?? randomUUID();
-  const workspaceId = (headers["x-klm-workspace-id"] as string) ?? randomUUID();
-  const projectId = (headers["x-klm-project-id"] as string) ?? randomUUID();
-  const userId = (headers["x-klm-user-id"] as string) ?? randomUUID();
-
-  return {
-    organizationId: orgId,
-    workspaceId,
-    projectId,
-    userId,
-    requestId: randomUUID(),
-  };
-}
 
 function authenticate(authHeader?: string): boolean {
   if (!authHeader?.startsWith("Bearer ")) return false;
@@ -42,9 +24,19 @@ app.addHook("onRequest", async (request, reply) => {
   }
 });
 
-app.get("/health", async () => ({ status: "ok", service: "klm-gateway" }));
+app.setErrorHandler((error, _request, reply) => {
+  if (error instanceof TenantValidationError) {
+    return reply.code(error.statusCode).send({ error: error.message });
+  }
+  throw error;
+});
 
-/** KLM native API */
+app.get("/health", async () => ({
+  status: "ok",
+  service: "klm-gateway",
+  store: process.env.DATABASE_URL ? "postgres" : process.env.KLM_STORE_BACKEND ?? "file",
+}));
+
 app.post<{ Body: { input: string; model?: string; client?: ClientType } }>(
   "/v1/klm/completions",
   async (request) => {
@@ -60,7 +52,6 @@ app.post<{ Body: { input: string; model?: string; client?: ClientType } }>(
   }
 );
 
-/** OpenAI-compatible API — drop-in for Cursor, Continue, etc. */
 app.post<{
   Body: {
     model?: string;
@@ -69,14 +60,18 @@ app.post<{
   };
 }>("/v1/chat/completions", async (request, reply) => {
   const tenant = extractTenant(request.headers);
-  const messages = request.body.messages ?? [];
-  const lastUser = [...messages].reverse().find((m) => m.role === "user");
-  const input = lastUser?.content ?? "";
+  const rawMessages = request.body.messages ?? [];
+  const messageHistory: ConversationMessage[] = rawMessages.map((m) => ({
+    role: m.role as ConversationMessage["role"],
+    content: m.content,
+  }));
 
+  const input = lastUserMessage(messageHistory);
   const klmRequest: KlmRequest = {
     tenant,
     client: "openai_compat",
     input,
+    messageHistory,
     modelOverride: request.body.model,
     stream: request.body.stream ?? false,
   };
@@ -127,11 +122,12 @@ app.post<{
       verificationPassed: response.verificationPassed,
       warnings: response.warnings,
       provider: response.providerUsed,
+      contextMessages: messageHistory.length,
+      recentContextLines: buildConversationContext(messageHistory).length,
     },
   };
 });
 
-/** Project state endpoints */
 app.get("/v1/projects/:projectId/state", async (request) => {
   const { projectId } = request.params as { projectId: string };
   const state = await store.getProjectState(projectId);
@@ -151,8 +147,7 @@ app.get("/v1/projects/:projectId/invariants", async (request) => {
 async function main() {
   await app.listen({ port: PORT, host: HOST });
   console.log(`KLM Gateway listening on http://${HOST}:${PORT}`);
-  console.log(`OpenAI-compatible: POST /v1/chat/completions`);
-  console.log(`Native API: POST /v1/klm/completions`);
+  console.log(`Store: ${process.env.DATABASE_URL ? "postgres" : process.env.KLM_STATE_PATH ?? ".klm-data"}`);
 }
 
 main().catch((err) => {

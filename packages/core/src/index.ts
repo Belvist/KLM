@@ -1,3 +1,4 @@
+export * from "./conversation.js";
 export * from "./schemas/memory.js";
 export * from "./schemas/runtime.js";
 export * from "./schemas/tenancy.js";

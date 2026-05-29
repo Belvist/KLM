@@ -7,6 +7,9 @@ import type {
 } from "@klm/core";
 import type { ModelRouter } from "@klm/model-adapters";
 
+export { simulateFutures, rankActions, scoreAction, finalScore } from "./scorer.js";
+export type { ActionScore } from "./scorer.js";
+
 export interface Verifier {
   verifyAndRepair(
     action: RankedAction,
@@ -27,9 +30,7 @@ export class CompositeVerifier implements Verifier {
 
     for (const invariant of invariants) {
       const violation = this.checkInvariant(action, invariant);
-      if (violation) {
-        violations.push(violation);
-      }
+      if (violation) violations.push(violation);
     }
 
     for (const decision of projectState.decisions.filter((d) => d.status === "active")) {
@@ -101,7 +102,10 @@ export class CompositeVerifier implements Verifier {
       return `Approach contradicts centralized architecture decision`;
     }
 
-    if (decisionLower.includes("must not") && approachLower.includes(decisionLower.replace("must not ", ""))) {
+    if (
+      decisionLower.includes("must not") &&
+      approachLower.includes(decisionLower.replace("must not ", ""))
+    ) {
       return `Approach may violate explicit prohibition`;
     }
 
@@ -119,7 +123,8 @@ export class CompositeVerifier implements Verifier {
       messages: [
         {
           role: "system",
-          content: "Fix the proposed action to satisfy all invariants. Return the corrected approach only.",
+          content:
+            "Fix the proposed action to satisfy all invariants. Return the corrected approach only.",
         },
         {
           role: "user",
@@ -135,79 +140,4 @@ export class CompositeVerifier implements Verifier {
 
     return response.content;
   }
-}
-
-export function rankActions(
-  actions: CandidateAction[],
-  futures: Array<{ actionId: string; overallScore: number }>,
-  weights: Record<string, number> = {
-    goal_fit: 0.25,
-    architecture_integrity: 0.2,
-    security: 0.2,
-    scalability: 0.1,
-    simplicity: 0.1,
-    future_stability: 0.1,
-    cost: 0.05,
-  }
-): RankedAction[] {
-  const futureMap = new Map(futures.map((f) => [f.actionId, f.overallScore]));
-
-  const scored = actions.map((action) => {
-    const baseScore = futureMap.get(action.id) ?? 0.5;
-    const complexityPenalty =
-      action.estimatedComplexity === "high" ? 0.1 : action.estimatedComplexity === "medium" ? 0.05 : 0;
-
-    const scores: Record<string, number> = {};
-    for (const [key, weight] of Object.entries(weights)) {
-      scores[key] = baseScore * weight;
-    }
-
-    const totalScore = Object.values(scores).reduce((a, b) => a + b, 0) - complexityPenalty;
-
-    return { ...action, totalScore, scores };
-  });
-
-  return scored
-    .sort((a, b) => b.totalScore - a.totalScore)
-    .map((action, index) => ({
-      ...action,
-      rank: index + 1,
-    }));
-}
-
-export function simulateFutures(
-  actions: CandidateAction[]
-): import("@klm/core").SimulatedFuture[] {
-  const scenarios = [
-    { name: "user_growth", weight: 0.2 },
-    { name: "security_attack", weight: 0.25 },
-    { name: "new_service", weight: 0.2 },
-    { name: "team_scaling", weight: 0.15 },
-    { name: "api_change", weight: 0.2 },
-  ];
-
-  return actions.map((action) => {
-    const complexityScore =
-      action.estimatedComplexity === "high"
-        ? 0.85
-        : action.estimatedComplexity === "medium"
-          ? 0.7
-          : 0.5;
-
-    const scenarioResults = scenarios.map((s) => ({
-      name: s.name,
-      outcome: `Under ${s.name}, ${action.approach}`,
-      riskDelta: action.estimatedComplexity === "low" ? 0.3 : -0.1,
-      score: complexityScore * s.weight * 5,
-    }));
-
-    const overallScore =
-      scenarioResults.reduce((sum, s) => sum + s.score, 0) / scenarios.length;
-
-    return {
-      actionId: action.id,
-      scenarios: scenarioResults,
-      overallScore: Math.min(1, Math.max(0, overallScore)),
-    };
-  });
 }
