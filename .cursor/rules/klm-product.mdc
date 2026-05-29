@@ -1,0 +1,31 @@
+---
+description: KLM Runtime — продуктовые стандарты (не demo, не MVP-заглушки)
+alwaysApply: true
+---
+
+# KLM Runtime — это продукт
+
+KLM-∞ Runtime — **production intelligence platform**, не чат-обёртка и не учебный skeleton.
+
+## Принципы
+
+1. **Модель заменяема.** Память, состояние, решения, инварианты, audit — постоянны.
+2. **PostgreSQL-first** для API + MCP + multi-tenant. File-store — только local single-process dev.
+3. **Никаких fake/stream заглушек:** streaming = тот же ответ, что прошёл verifier; memory update — после полного ответа.
+4. **Никаких дублей** в EventLog, decisions, invariants — дедупликация обязательна.
+5. **Каждый внешний запрос** — tenant context, audit trail, при возможности model_call log.
+6. **Evals обязательны** при изменении runtime, memory, scorer, verifier.
+7. **Минимальный scope diff**, но **полная реализация** в рамках задачи — без placeholder-логики.
+
+## Архитектура (не нарушать)
+
+```
+Client → Gateway → KLM Runtime → Memory/State/Semantic → Verifier → Model Router
+```
+
+Новые фичи — отдельные пакеты (`packages/*`), не монолит в `apps/api`.
+
+## Документация
+
+- План: `docs/PLAN.md`
+- Продукт: `docs/PRODUCT.md`

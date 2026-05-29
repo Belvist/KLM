@@ -53,8 +53,27 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
+  packages/audit:
+    dependencies:
+      '@klm/core':
+        specifier: workspace:*
+        version: link:../core
+      pg:
+        specifier: ^8.14.1
+        version: 8.21.0
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.11
+        version: 8.20.0
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
   packages/bootstrap:
     dependencies:
+      '@klm/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@klm/core':
         specifier: workspace:*
         version: link:../core
@@ -64,6 +83,9 @@ importers:
       '@klm/runtime':
         specifier: workspace:*
         version: link:../runtime
+      '@klm/semantic-memory':
+        specifier: workspace:*
+        version: link:../semantic-memory
       '@klm/state-store':
         specifier: workspace:*
         version: link:../state-store
@@ -77,6 +99,31 @@ importers:
       zod:
         specifier: ^3.24.2
         version: 3.25.76
+    devDependencies:
+      tsx:
+        specifier: ^4.19.3
+        version: 4.22.3
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
+  packages/evaluation:
+    dependencies:
+      '@klm/core':
+        specifier: workspace:*
+        version: link:../core
+      '@klm/memory-core':
+        specifier: workspace:*
+        version: link:../memory-core
+      '@klm/runtime':
+        specifier: workspace:*
+        version: link:../runtime
+      '@klm/state-store':
+        specifier: workspace:*
+        version: link:../state-store
+      '@klm/verifier':
+        specifier: workspace:*
+        version: link:../verifier
     devDependencies:
       tsx:
         specifier: ^4.19.3
@@ -119,6 +166,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@klm/audit':
+        specifier: workspace:*
+        version: link:../audit
       '@klm/core':
         specifier: workspace:*
         version: link:../core
@@ -128,6 +178,9 @@ importers:
       '@klm/model-adapters':
         specifier: workspace:*
         version: link:../model-adapters
+      '@klm/semantic-memory':
+        specifier: workspace:*
+        version: link:../semantic-memory
       '@klm/state-store':
         specifier: workspace:*
         version: link:../state-store
@@ -138,6 +191,28 @@ importers:
       tsx:
         specifier: ^4.19.3
         version: 4.22.3
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
+  packages/semantic-memory:
+    dependencies:
+      '@klm/core':
+        specifier: workspace:*
+        version: link:../core
+      '@klm/memory-core':
+        specifier: workspace:*
+        version: link:../memory-core
+      '@klm/model-adapters':
+        specifier: workspace:*
+        version: link:../model-adapters
+      pg:
+        specifier: ^8.14.1
+        version: 8.21.0
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.11
+        version: 8.20.0
       typescript:
         specifier: ^5.8.2
         version: 5.9.3

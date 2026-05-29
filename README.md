@@ -27,7 +27,20 @@ pnpm dev:mcp    # MCP server for Cursor
 
 **Production tenancy:** `KLM_ENV=production` requires `X-KLM-Organization-Id`, `X-KLM-Workspace-Id`, `X-KLM-Project-Id`, `X-KLM-User-Id`.
 
-See [docs/PLAN.md](docs/PLAN.md) for roadmap and completed fixes.
+## Product stack (Phase 2)
+
+| Package | Role |
+|---------|------|
+| `@klm/semantic-memory` | OpenAI embeddings + pgvector hybrid activation |
+| `@klm/audit` | Audit logs + model call telemetry |
+| `@klm/evaluation` | Quality gate: `pnpm eval` |
+
+```bash
+pnpm docker:up && pnpm db:migrate && pnpm db:seed
+pnpm eval
+```
+
+See [docs/PRODUCT.md](docs/PRODUCT.md) and [docs/PLAN.md](docs/PLAN.md).
 
 ## Connect Cursor via MCP
 

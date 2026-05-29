@@ -100,11 +100,25 @@ export class InMemoryStateStore implements StateStore {
     }
 
     if (update.newDecision) {
-      state.decisions = [...state.decisions, DecisionNodeSchema.parse(update.newDecision)];
+      const parsed = DecisionNodeSchema.parse(update.newDecision);
+      const exists = state.decisions.some(
+        (d) =>
+          d.status === "active" &&
+          d.decision.toLowerCase().trim() === parsed.decision.toLowerCase().trim()
+      );
+      if (!exists) {
+        state.decisions = [...state.decisions, parsed];
+      }
     }
 
     if (update.newInvariant) {
-      state.invariants = [...state.invariants, InvariantSchema.parse(update.newInvariant)];
+      const parsed = InvariantSchema.parse(update.newInvariant);
+      const exists = state.invariants.some(
+        (i) => i.rule.toLowerCase().trim() === parsed.rule.toLowerCase().trim()
+      );
+      if (!exists) {
+        state.invariants = [...state.invariants, parsed];
+      }
     }
 
     if (update.updatedRisk) {

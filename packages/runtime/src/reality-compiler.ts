@@ -7,48 +7,26 @@ import type {
 } from "@klm/core";
 import type { ModelRouter } from "@klm/model-adapters";
 
+export interface CompileParams {
+  verifiedAction: VerifiedAction;
+  outputType: OutputFormat;
+  intent: ParsedIntent;
+  projectState: ProjectState;
+  memoryContext: string;
+}
+
 export class RealityCompiler {
   constructor(private router: ModelRouter) {}
 
-  async compile(params: {
-    verifiedAction: VerifiedAction;
-    outputType: OutputFormat;
-    intent: ParsedIntent;
-    projectState: ProjectState;
-    memoryContext: string;
-  }): Promise<CompiledOutput> {
-    const taskType =
-      params.outputType === "code" || params.outputType === "mixed"
-        ? "codegen"
-        : params.intent.taskType === "architecture"
-          ? "planning"
-          : "general";
-
-    const systemPrompt = this.buildSystemPrompt(params);
-
-    const response = await this.router.generate(taskType, {
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: [
-            `Task: ${params.intent.rawInput}`,
-            `Approach: ${params.verifiedAction.repairedOutput ?? params.verifiedAction.approach}`,
-            params.memoryContext ? `\nProject memory:\n${params.memoryContext}` : "",
-            params.verifiedAction.violations.length
-              ? `\nAddress these violations:\n${params.verifiedAction.violations.map((v) => v.message).join("\n")}`
-              : "",
-          ].join("\n"),
-        },
-      ],
-      maxTokens: 8192,
-    });
-
-    const artifacts = this.extractArtifacts(response.content);
-
+  async compile(params: CompileParams): Promise<CompiledOutput> {
+    let fullContent = "";
+    for await (const chunk of this.compileStream(params)) {
+      fullContent += chunk;
+    }
+    const artifacts = this.extractArtifacts(fullContent);
     return {
       type: params.outputType,
-      content: response.content,
+      content: fullContent,
       artifacts,
       warnings: params.verifiedAction.violations
         .filter((v) => !v.repaired)
@@ -64,6 +42,42 @@ export class RealityCompiler {
             ]
           : undefined,
     };
+  }
+
+  /**
+   * Streams the same model output that compile() would produce (single generation pass).
+   */
+  async *compileStream(params: CompileParams): AsyncIterable<string> {
+    const taskType =
+      params.outputType === "code" || params.outputType === "mixed"
+        ? "codegen"
+        : params.intent.taskType === "architecture"
+          ? "planning"
+          : "general";
+
+    const systemPrompt = this.buildSystemPrompt(params);
+    const userContent = [
+      `Task: ${params.intent.rawInput}`,
+      `Approach: ${params.verifiedAction.repairedOutput ?? params.verifiedAction.approach}`,
+      params.memoryContext ? `\nProject memory:\n${params.memoryContext}` : "",
+      params.verifiedAction.violations.length
+        ? `\nAddress these violations:\n${params.verifiedAction.violations.map((v) => v.message).join("\n")}`
+        : "",
+    ].join("\n");
+
+    for await (const chunk of this.router.stream(taskType, {
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+      maxTokens: 8192,
+      stream: true,
+      jsonMode: false,
+    })) {
+      if (chunk.content) {
+        yield chunk.content;
+      }
+    }
   }
 
   private buildSystemPrompt(params: {

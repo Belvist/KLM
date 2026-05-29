@@ -9,7 +9,11 @@
     "dev:mcp": "pnpm --filter @klm/mcp-server dev",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
-    "db:migrate": "pnpm --filter @klm/state-store db:migrate"
+    "db:migrate": "pnpm --filter @klm/state-store db:migrate",
+    "db:seed": "pnpm --filter @klm/state-store db:seed",
+    "eval": "pnpm --filter @klm/evaluation eval",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down"
   },
   "engines": {
     "node": ">=20"

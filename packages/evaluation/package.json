@@ -1,0 +1,23 @@
+{
+  "name": "@klm/evaluation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node -e \"process.exit(0)\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "eval": "node --import tsx src/run.ts"
+  },
+  "dependencies": {
+    "@klm/core": "workspace:*",
+    "@klm/memory-core": "workspace:*",
+    "@klm/runtime": "workspace:*",
+    "@klm/verifier": "workspace:*",
+    "@klm/state-store": "workspace:*",
+    "@klm/verifier": "workspace:*"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}

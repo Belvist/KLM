@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: pgvector/pgvector:pg16
     environment:
       POSTGRES_USER: klm
       POSTGRES_PASSWORD: klm
@@ -9,6 +9,30 @@ services:
       - "5432:5432"
     volumes:
       - klm_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U klm -d klm"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      KLM_PORT: "3100"
+      KLM_HOST: "0.0.0.0"
+      KLM_ENV: development
+      KLM_STORE_BACKEND: postgres
+      KLM_API_KEY: ${KLM_API_KEY:-klm_dev_key_change_me}
+      DATABASE_URL: postgresql://klm:klm@postgres:5432/klm
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   klm_pg_data:

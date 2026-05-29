@@ -1,59 +1,67 @@
-# KLM Runtime — план (Phase 1.5 → 2)
+# KLM Runtime — Product Roadmap
 
-**Журнал:** все изменения фиксируются здесь.
-
----
-
-## Phase 1 — закрыто ✅
-
-OpenRouter, bootstrap, tenancy, memory pipeline, scorer, message history, activator.
+**Продукт:** см. [`PRODUCT.md`](./PRODUCT.md) · **Правила:** `.cursor/rules/klm-product.mdc`
 
 ---
 
-## Phase 1.5 — persistence correctness (2026-05-29)
+## Phase 1 / 1.5 — ✅ Закрыто
 
-| # | Проблема (code review) | Статус | Решение |
-|---|------------------------|--------|---------|
-| P0-1 | FileStateStore cache между процессами | ✅ | Чтение с диска на каждую операцию, `withStore()` RMW |
-| P0-2 | PostgreSQL migration path | ✅ | `pnpm db:migrate`, runtime не мигрирует |
-| P0-3 | FK: event до project | ✅ | `ensureProject` → `saveEvent` |
-| P0-4 | Дубли user events | ✅ | `BasicMemoryUpdater` только assistant `feedback` |
-| P0-5 | Дубли decisions/invariants | ✅ | `dedup.ts` + проверка в stores |
-| P1-6 | fast_stream ложный | ✅ | Удалён; только buffered stream |
-| P1-7 | MCP без env в prod | ✅ | `process.exit(1)` при `KLM_ENV=production` |
-| P1-8 | Пустой user input | ✅ | 400 в `/v1/chat/completions` и `/v1/klm/completions` |
-| P1-9 | KLM_DEFAULT_* не читались | ✅ | `ModelRouter` читает env |
-| P1-10 | GET без tenant boundary | ✅ | 403 если `projectId` ≠ tenant |
+Runtime skeleton, persistence fixes, shared store, dedup, tenancy, scorer.
 
 ---
 
-## Phase 2 — следующее
+## Phase 2 — Product (2026-05-29) 🔄
 
 | # | Задача | Статус |
 |---|--------|--------|
-| 11 | Docker Compose + документация migrate/seed | 🔄 partial (`docker-compose.yml`) |
-| 12 | Semantic activation (vector DB) | ⏳ |
-| 13 | Real streaming (compile → stream → memory) | ⏳ |
-| 14 | Eval suite | ⏳ |
-| 15 | SSO / RBAC / audit | ⏳ |
+| 11 | Docker pgvector + Dockerfile + `pnpm docker:up` | ✅ |
+| 12 | Migrations 002 + `pnpm db:migrate` + `pnpm db:seed` | ✅ |
+| 13 | `@klm/semantic-memory` (embeddings + pgvector + hybrid activator) | ✅ |
+| 14 | `@klm/audit` (Postgres + console audit, model_calls table) | ✅ |
+| 15 | Real streaming (`compileStream` → same KLM answer) | ✅ |
+| 16 | `@klm/evaluation` — `pnpm eval` | ✅ |
+| 17 | SSO / RBAC | ⏳ Phase 3 |
 
 ---
 
-## Команды
+## Запуск продукта локально
 
 ```bash
-docker compose up -d
+cp .env.example .env
+# OPENAI_API_KEY — для semantic memory (embeddings)
+# OPENROUTER_API_KEY — для completions
+
+pnpm docker:up
 pnpm db:migrate
-KLM_STORE_BACKEND=postgres pnpm dev:api
+pnpm db:seed
+
+KLM_STORE_BACKEND=postgres
+pnpm dev:api
+pnpm dev:mcp
+pnpm eval
 ```
 
-**Dev file-store:** только один процесс или используй один `KLM_STATE_PATH`; для API+MCP — PostgreSQL.
+**Demo project UUIDs** — вывод `db:seed`. Используй в Cursor MCP и API headers.
+
+---
+
+## Архитектура Phase 2
+
+```
+Client → Gateway → KlmRuntime
+                    ├── HybridMemoryActivator (rules + pgvector)
+                    ├── Verifier + Scorer
+                    ├── RealityCompiler.compile / compileStream
+                    ├── MemoryPipeline → PostgreSQL
+                    ├── SemanticMemoryIndexer → memory_chunks
+                    └── AuditLogger → audit_logs, model_calls
+```
 
 ---
 
 ## Журнал
 
-| Дата | Коммит / действие |
-|------|-------------------|
-| 2026-05-29 | Phase 1 foundations → GitHub |
-| 2026-05-29 | Phase 1.5 persistence fixes |
+| Дата | Событие |
+|------|---------|
+| 2026-05-29 | Phase 1.5 persistence |
+| 2026-05-29 | Phase 2 product: semantic, audit, evals, streaming, docker |
