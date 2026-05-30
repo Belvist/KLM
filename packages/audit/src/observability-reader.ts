@@ -1,9 +1,15 @@
 import pg from "pg";
+import {
+  exposeTextContent,
+  type ContentExposureOptions,
+  type ExposedTextContent,
+} from "./content-exposure.js";
 
 export interface PaginationParams {
   projectId: string;
   limit: number;
   cursor?: string;
+  contentExposure?: ContentExposureOptions;
 }
 
 export interface PaginatedResult<T> {
@@ -11,12 +17,11 @@ export interface PaginatedResult<T> {
   nextCursor?: string;
 }
 
-export interface EventRow {
+export interface EventRow extends ExposedTextContent {
   id: string;
   projectId: string;
   userId: string;
   type: string;
-  content: string;
   timestamp: string;
   source: string;
   importance: number;
@@ -50,12 +55,11 @@ export interface AuditLogRow {
   createdAt: string;
 }
 
-export interface MemoryChunkRow {
+export interface MemoryChunkRow extends ExposedTextContent {
   id: string;
   projectId: string;
   chunkType: string;
   sourceId?: string;
-  content: string;
   metadata: Record<string, unknown>;
   createdAt: string;
 }
@@ -73,7 +77,14 @@ function redactValue(key: string, value: unknown): unknown {
   if (/key|secret|token|password|authorization|apikey/i.test(key)) {
     return "[redacted]";
   }
-  if (value && typeof value === "object" && !Array.isArray(value)) {
+  if (Array.isArray(value)) {
+    return value.map((item) =>
+      item && typeof item === "object" && !Array.isArray(item)
+        ? redactPayload(item as Record<string, unknown>)
+        : item
+    );
+  }
+  if (value && typeof value === "object") {
     return redactPayload(value as Record<string, unknown>);
   }
   return value;
@@ -99,6 +110,10 @@ export class ObservabilityReader {
   }
 
   async listEvents(params: PaginationParams): Promise<PaginatedResult<EventRow>> {
+    const exposure = params.contentExposure ?? {
+      includeContent: false,
+      forceRedactContent: false,
+    };
     const values: unknown[] = [params.projectId, params.limit + 1];
     let query = `
       SELECT id, project_id, user_id, type, content, timestamp, source, importance
@@ -112,16 +127,19 @@ export class ObservabilityReader {
     query += ` ORDER BY timestamp DESC LIMIT $2`;
 
     const res = await this.pool.query(query, values);
-    const mapped = res.rows.map((row) => ({
-      id: String(row.id),
-      projectId: String(row.project_id),
-      userId: String(row.user_id),
-      type: String(row.type),
-      content: String(row.content),
-      timestamp: new Date(row.timestamp as string | Date).toISOString(),
-      source: String(row.source),
-      importance: Number(row.importance),
-    }));
+    const mapped = res.rows.map((row) => {
+      const rawContent = String(row.content);
+      return {
+        id: String(row.id),
+        projectId: String(row.project_id),
+        userId: String(row.user_id),
+        type: String(row.type),
+        ...exposeTextContent(rawContent, exposure),
+        timestamp: new Date(row.timestamp as string | Date).toISOString(),
+        source: String(row.source),
+        importance: Number(row.importance),
+      };
+    });
     return paginateRows(mapped, params.limit, (item) => item.timestamp);
   }
 
@@ -190,6 +208,10 @@ export class ObservabilityReader {
   async listMemoryChunks(
     params: PaginationParams & { chunkType?: string }
   ): Promise<PaginatedResult<MemoryChunkRow>> {
+    const exposure = params.contentExposure ?? {
+      includeContent: false,
+      forceRedactContent: false,
+    };
     const values: unknown[] = [params.projectId, params.limit + 1];
     let query = `
       SELECT id, project_id, chunk_type, source_id, content, metadata, created_at
@@ -209,15 +231,18 @@ export class ObservabilityReader {
     query += ` ORDER BY created_at DESC LIMIT $2`;
 
     const res = await this.pool.query(query, values);
-    const mapped = res.rows.map((row) => ({
-      id: String(row.id),
-      projectId: String(row.project_id),
-      chunkType: String(row.chunk_type),
-      sourceId: row.source_id ? String(row.source_id) : undefined,
-      content: String(row.content),
-      metadata: redactPayload((row.metadata as Record<string, unknown>) ?? {}),
-      createdAt: new Date(row.created_at as string | Date).toISOString(),
-    }));
+    const mapped = res.rows.map((row) => {
+      const rawContent = String(row.content);
+      return {
+        id: String(row.id),
+        projectId: String(row.project_id),
+        chunkType: String(row.chunk_type),
+        sourceId: row.source_id ? String(row.source_id) : undefined,
+        ...exposeTextContent(rawContent, exposure),
+        metadata: redactPayload((row.metadata as Record<string, unknown>) ?? {}),
+        createdAt: new Date(row.created_at as string | Date).toISOString(),
+      };
+    });
     return paginateRows(mapped, params.limit, (item) => item.createdAt);
   }
 }

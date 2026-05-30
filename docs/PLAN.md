@@ -128,3 +128,18 @@ Invoke-RestMethod -Uri "http://localhost:3100/v1/projects/00000000-0000-4000-800
 | 2026-05-29 | Phase 2.1 dedup + router audit + CI |
 | 2026-05-29 | Phase 2.2 e2e evals + KLM Runtime seed |
 | 2026-05-29 | Phase 2.3 observability endpoints + demo/live split |
+| 2026-05-30 | Phase 2.3.1 content redaction + includeContent controls |
+
+---
+
+## Phase 2.3.1 — ✅ (2026-05-30)
+
+Harden observability output against prompt/secret leakage.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `contentPreview` / `contentLength` / `contentHash` by default | ✅ |
+| 2 | `?includeContent=true` opt-in for full text | ✅ |
+| 3 | `KLM_OBSERVABILITY_REDACT_CONTENT=true` force-redact | ✅ |
+| 4 | Recursive `redactPayload` for arrays | ✅ |
+| 5 | E2e redaction tests | ✅ |

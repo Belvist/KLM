@@ -1,6 +1,6 @@
 import pg from "pg";
 import { buildGateway } from "@klm/api/gateway";
-import { PostgresAuditLogger } from "@klm/audit";
+import { PostgresAuditLogger, redactPayload } from "@klm/audit";
 import { createKlmApp, resetKlmAppForTests } from "@klm/bootstrap";
 import { ModelRouter } from "@klm/model-adapters";
 import type { EvalResult } from "./helpers.js";
@@ -52,16 +52,82 @@ export async function runObservabilityE2e(
     headers: tenantHeaders(),
   });
 
-  const eventsBody = eventsRes.json() as PaginatedResponse<{ type: string; content: string }>;
+  const eventsBody = eventsRes.json() as PaginatedResponse<{
+    type: string;
+    content?: string;
+    contentPreview?: string;
+    contentLength?: number;
+    contentHash?: string;
+  }>;
   const eventTypes = new Set(eventsBody.items?.map((e) => e.type) ?? []);
   const hasMessage = eventTypes.has("message");
   const hasFeedback = eventTypes.has("feedback");
+  const sampleEvent = eventsBody.items?.find((e) => e.type === "message");
 
   record(
     results,
     "observability-events",
     eventsRes.statusCode === 200 && hasMessage && hasFeedback,
     `status=${eventsRes.statusCode} types=${[...eventTypes].join(",")}`
+  );
+
+  record(
+    results,
+    "observability-events-content-redacted-by-default",
+    Boolean(
+      sampleEvent &&
+        sampleEvent.content === undefined &&
+        typeof sampleEvent.contentPreview === "string" &&
+        typeof sampleEvent.contentLength === "number" &&
+        typeof sampleEvent.contentHash === "string" &&
+        sampleEvent.contentHash.length === 64
+    ),
+    `message event has preview/length/hash, no full content`
+  );
+
+  const eventsFullRes = await app.inject({
+    method: "GET",
+    url: `/v1/projects/${DEMO_IDS.project}/events?limit=10&includeContent=true`,
+    headers: tenantHeaders(),
+  });
+  const eventsFullBody = eventsFullRes.json() as PaginatedResponse<{ content?: string }>;
+  const hasFullContent = eventsFullBody.items?.some(
+    (e) => typeof e.content === "string" && e.content.length > 0
+  );
+
+  record(
+    results,
+    "observability-events-include-content-opt-in",
+    eventsFullRes.statusCode === 200 && hasFullContent === true,
+    `includeContent=true exposes full content=${hasFullContent}`
+  );
+
+  process.env.KLM_OBSERVABILITY_REDACT_CONTENT = "true";
+  const eventsForcedRes = await app.inject({
+    method: "GET",
+    url: `/v1/projects/${DEMO_IDS.project}/events?limit=10&includeContent=true`,
+    headers: tenantHeaders(),
+  });
+  delete process.env.KLM_OBSERVABILITY_REDACT_CONTENT;
+  const eventsForcedBody = eventsForcedRes.json() as PaginatedResponse<{ content?: string }>;
+  const forcedRedacted = !eventsForcedBody.items?.some((e) => e.content !== undefined);
+
+  record(
+    results,
+    "observability-events-force-redact-env",
+    eventsForcedRes.statusCode === 200 && forcedRedacted,
+    `KLM_OBSERVABILITY_REDACT_CONTENT blocks includeContent=${forcedRedacted}`
+  );
+
+  const arrayRedacted = redactPayload({
+    headers: [{ authorization: "Bearer secret-token" }],
+  }) as { headers: Array<{ authorization: string }> };
+
+  record(
+    results,
+    "observability-redact-payload-arrays",
+    arrayRedacted.headers[0]?.authorization === "[redacted]",
+    `nested array secrets redacted=${arrayRedacted.headers[0]?.authorization === "[redacted]"}`
   );
 
   const modelCallsRes = await app.inject({

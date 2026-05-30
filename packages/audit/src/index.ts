@@ -22,6 +22,14 @@ export {
   parseLimit,
   redactPayload,
 } from "./observability-reader.js";
+export {
+  resolveContentExposure,
+  exposeTextContent,
+  contentPreview,
+  contentHash,
+  isForceRedactContent,
+  CONTENT_PREVIEW_MAX,
+} from "./content-exposure.js";
 export type {
   EventRow,
   ModelCallRow,
@@ -30,3 +38,4 @@ export type {
   PaginatedResult,
   PaginationParams,
 } from "./observability-reader.js";
+export type { ContentExposureOptions, ExposedTextContent } from "./content-exposure.js";

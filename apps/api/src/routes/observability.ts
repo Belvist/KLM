@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { ObservabilityReader, parseLimit } from "@klm/audit";
+import { ObservabilityReader, parseLimit, resolveContentExposure } from "@klm/audit";
 import { extractTenant } from "@klm/bootstrap";
 import { assertProjectAccess, resolveScopedProjectId } from "../lib/tenant-access.js";
 
@@ -15,39 +15,43 @@ export function registerObservabilityRoutes(
 
   app.get<{
     Params: { projectId: string };
-    Querystring: { limit?: string; cursor?: string };
+    Querystring: { limit?: string; cursor?: string; includeContent?: string };
   }>("/v1/projects/:projectId/events", async (request, reply) => {
     const { projectId } = request.params;
     const tenant = extractTenant(request.headers);
     if (!assertProjectAccess(tenant.projectId, projectId, reply)) return;
 
     const limit = parseLimit(request.query.limit);
+    const contentExposure = resolveContentExposure(request.query.includeContent);
     const result = await reader.listEvents({
       projectId,
       limit,
       cursor: request.query.cursor,
+      contentExposure,
     });
 
-    return { projectId, ...result };
+    return { projectId, includeContent: contentExposure.includeContent, ...result };
   });
 
   app.get<{
     Params: { projectId: string };
-    Querystring: { limit?: string; cursor?: string; type?: string };
+    Querystring: { limit?: string; cursor?: string; type?: string; includeContent?: string };
   }>("/v1/projects/:projectId/memory-chunks", async (request, reply) => {
     const { projectId } = request.params;
     const tenant = extractTenant(request.headers);
     if (!assertProjectAccess(tenant.projectId, projectId, reply)) return;
 
     const limit = parseLimit(request.query.limit);
+    const contentExposure = resolveContentExposure(request.query.includeContent);
     const result = await reader.listMemoryChunks({
       projectId,
       limit,
       cursor: request.query.cursor,
       chunkType: request.query.type,
+      contentExposure,
     });
 
-    return { projectId, ...result };
+    return { projectId, includeContent: contentExposure.includeContent, ...result };
   });
 
   app.get<{
