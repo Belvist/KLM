@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { buildConversationContext } from "@klm/core";
 import type { Event, KlmRequest, KlmResponse, ProjectState, Situation } from "@klm/core";
+import { disabledCodebaseActivationReport, publicCodebaseActivationReport } from "@klm/core";
 import type { AuditLogger } from "@klm/audit";
 import { auditFromTenant } from "@klm/audit";
 import type { MemoryActivator } from "@klm/memory-core";
@@ -114,6 +115,7 @@ export class KlmRuntime {
       memoryUpdated: true,
       verificationPassed: ctx.verified.passed,
       warnings: compiled.warnings,
+      codebaseActivation: ctx.codebaseActivation,
     };
 
     await this.audit?.log(
@@ -177,6 +179,7 @@ export class KlmRuntime {
       memoryUpdated: true,
       verificationPassed: ctx.verified.passed,
       warnings: compiled.warnings,
+      codebaseActivation: ctx.codebaseActivation,
     };
   }
 
@@ -225,6 +228,19 @@ export class KlmRuntime {
       recentEvents
     );
 
+    const codebaseActivation = publicCodebaseActivationReport(
+      memoryContext.codebaseActivation ?? disabledCodebaseActivationReport()
+    );
+
+    await this.audit?.log(
+      auditFromTenant(tenant, "codebase_activation", "klm-runtime", {
+        activationUsed: codebaseActivation.activationUsed,
+        reason: codebaseActivation.reason,
+        searchTerms: codebaseActivation.searchTerms,
+        counts: codebaseActivation.counts,
+      })
+    );
+
     const candidateActions = generateCandidateActions(situation, memoryContext);
     const simulated = simulateFutures(candidateActions, projectState);
     const ranked = rankActions(candidateActions, simulated, projectState);
@@ -250,6 +266,7 @@ export class KlmRuntime {
       situation,
       memoryContext,
       verified,
+      codebaseActivation,
     };
   }
 

@@ -140,6 +140,7 @@ export async function buildGateway(options: BuildGatewayOptions = {}) {
         provider: response.providerUsed,
         contextMessages: messageHistory.length,
         recentContextLines: buildConversationContext(messageHistory).length,
+        codebaseActivation: response.codebaseActivation,
       },
     };
   });

@@ -49,6 +49,9 @@ export function extractTenant(
   const workspace = header(headers, "x-klm-workspace-id");
   const project = header(headers, "x-klm-project-id");
   const user = header(headers, "x-klm-user-id");
+  const requestIdHeader = header(headers, "x-klm-request-id");
+  const requestId =
+    requestIdHeader && UUID_RE.test(requestIdHeader) ? requestIdHeader : randomUUID();
 
   if (env === "production") {
     return {
@@ -56,7 +59,7 @@ export function extractTenant(
       workspaceId: requireUuid(workspace, "X-KLM-Workspace-Id"),
       projectId: requireUuid(project, "X-KLM-Project-Id"),
       userId: requireUuid(user, "X-KLM-User-Id"),
-      requestId: randomUUID(),
+      requestId,
     };
   }
 
@@ -65,6 +68,6 @@ export function extractTenant(
     workspaceId: workspace && UUID_RE.test(workspace) ? workspace : randomUUID(),
     projectId: project && UUID_RE.test(project) ? project : randomUUID(),
     userId: user && UUID_RE.test(user) ? user : randomUUID(),
-    requestId: randomUUID(),
+    requestId,
   };
 }
