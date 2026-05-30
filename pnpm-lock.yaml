@@ -86,9 +86,15 @@ importers:
       '@klm/audit':
         specifier: workspace:*
         version: link:../audit
+      '@klm/codebase-indexer':
+        specifier: workspace:*
+        version: link:../codebase-indexer
       '@klm/core':
         specifier: workspace:*
         version: link:../core
+      '@klm/memory-core':
+        specifier: workspace:*
+        version: link:../memory-core
       '@klm/model-adapters':
         specifier: workspace:*
         version: link:../model-adapters
@@ -108,6 +114,12 @@ importers:
 
   packages/codebase-indexer:
     dependencies:
+      '@klm/core':
+        specifier: workspace:*
+        version: link:../core
+      '@klm/memory-core':
+        specifier: workspace:*
+        version: link:../memory-core
       '@klm/semantic-memory':
         specifier: workspace:*
         version: link:../semantic-memory

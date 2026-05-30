@@ -127,7 +127,22 @@ Read-only query over structured codebase index.
 
 ---
 
-## Phase 2.6 — следующее
+## Phase 2.6 — ✅ Runtime Codebase Activation (2026-05-30)
+
+Runtime injects indexed codebase metadata into the reasoning loop (`contextSummary` → RealityCompiler).
+
+| #   | Задача                                               | Статус |
+| --- | ---------------------------------------------------- | ------ |
+| 1   | `CodebaseMemoryActivator` wraps memory activator     | ✅     |
+| 2   | Bootstrap wiring (`KLM_CODEBASE_ACTIVATION=true`)    | ✅     |
+| 3   | Metadata-only context (routes, symbols, files, deps) | ✅     |
+| 4   | E2e: activation on/off, /health in prompt            | ✅     |
+
+**P0:** opt-in env, `situation.projectId` only, no file content, reader security filters, disabled when env off.
+
+---
+
+## Phase 2.7 — следующее
 
 Impact analysis / test suggestions on top of codebase map — **not** autonomous code changes.
 

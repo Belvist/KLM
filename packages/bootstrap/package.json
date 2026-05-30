@@ -17,7 +17,9 @@
   },
   "dependencies": {
     "@klm/audit": "workspace:*",
+    "@klm/codebase-indexer": "workspace:*",
     "@klm/core": "workspace:*",
+    "@klm/memory-core": "workspace:*",
     "@klm/model-adapters": "workspace:*",
     "@klm/runtime": "workspace:*",
     "@klm/semantic-memory": "workspace:*",

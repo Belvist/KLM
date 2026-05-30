@@ -1,7 +1,17 @@
-import { createAuditLogger, type AuditLogger } from "@klm/audit";
 import { ModelRouter } from "@klm/model-adapters";
+import { RuleBasedMemoryActivator, type MemoryActivator } from "@klm/memory-core";
 import { KlmRuntime } from "@klm/runtime";
-import { createSemanticStack, isSemanticMemoryEnabled } from "@klm/semantic-memory";
+import {
+  CodebaseMemoryActivator,
+  CodebaseQueryReader,
+  isCodebaseActivationEnabled,
+} from "@klm/codebase-indexer";
+import {
+  createSemanticStack,
+  HybridMemoryActivator,
+  isSemanticMemoryEnabled,
+} from "@klm/semantic-memory";
+import { createAuditLogger, type AuditLogger } from "@klm/audit";
 import { createStateStore, resetSharedStoreForTests, type StateStore } from "@klm/state-store";
 
 export { extractTenant, getKlmEnvironment, TenantValidationError } from "./tenant.js";
@@ -23,6 +33,22 @@ export interface CreateKlmAppOptions {
   router?: ModelRouter;
 }
 
+function buildMemoryActivator(databaseUrl: string | undefined): MemoryActivator {
+  let activator: MemoryActivator = new RuleBasedMemoryActivator();
+
+  if (isSemanticMemoryEnabled(databaseUrl) && databaseUrl) {
+    const { index, embeddings } = createSemanticStack(databaseUrl);
+    activator = new HybridMemoryActivator(index, embeddings);
+  }
+
+  if (isCodebaseActivationEnabled(databaseUrl) && databaseUrl) {
+    const reader = new CodebaseQueryReader(databaseUrl);
+    activator = new CodebaseMemoryActivator(activator, reader);
+  }
+
+  return activator;
+}
+
 export async function createKlmApp(options: CreateKlmAppOptions = {}): Promise<KlmApp> {
   if (options.reset) {
     appInstance = null;
@@ -37,20 +63,26 @@ export async function createKlmApp(options: CreateKlmAppOptions = {}): Promise<K
 
   const databaseUrl = process.env.DATABASE_URL;
   const semanticEnabled = isSemanticMemoryEnabled(databaseUrl);
+  const memoryActivator = buildMemoryActivator(databaseUrl);
 
   let runtime: KlmRuntime;
 
   if (semanticEnabled && databaseUrl) {
-    const { activator, indexer } = createSemanticStack(databaseUrl);
+    const { indexer } = createSemanticStack(databaseUrl);
     runtime = new KlmRuntime({
       store,
       router,
       audit,
-      memoryActivator: activator,
+      memoryActivator,
       semanticIndexer: indexer,
     });
   } else {
-    runtime = new KlmRuntime({ store, router, audit });
+    runtime = new KlmRuntime({
+      store,
+      router,
+      audit,
+      memoryActivator,
+    });
   }
 
   appInstance = { store, router, runtime, audit };
