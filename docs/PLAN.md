@@ -110,9 +110,24 @@ Structured codebase map + optional semantic chunks (`code_file`, `code_symbol`, 
 
 ---
 
-## Phase 2.5 — следующее
+## Phase 2.5 — ✅ Codebase Query Layer (2026-05-30)
 
-Agent tooling on top of codebase map (impact analysis, test suggestions) — **not** autonomous code changes yet.
+Read-only query over structured codebase index.
+
+| #   | Задача                                                               | Статус |
+| --- | -------------------------------------------------------------------- | ------ |
+| 1   | `CodebaseQueryReader` — files, routes, symbols, dependencies         | ✅     |
+| 2   | API: `/v1/projects/:id/codebase/{files,routes,symbols,dependencies}` | ✅     |
+| 3   | MCP tool: `klm_search_codebase`                                      | ✅     |
+| 4   | E2e: query, 403, limit cap, no secret paths                          | ✅     |
+
+**P0:** tenant boundary on all 4 endpoints, limit max 100, no file content, secret path SQL + runtime exclusion, `parseSearchKind` allowlist, search metadata-only (no memory_chunks), MCP projectId from tenant only.
+
+---
+
+## Phase 2.6 — следующее
+
+Impact analysis / test suggestions on top of codebase map — **not** autonomous code changes.
 
 ---
 
