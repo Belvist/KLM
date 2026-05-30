@@ -100,6 +100,25 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
+  packages/codebase-indexer:
+    dependencies:
+      '@klm/semantic-memory':
+        specifier: workspace:*
+        version: link:../semantic-memory
+      pg:
+        specifier: ^8.14.1
+        version: 8.21.0
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+    devDependencies:
+      '@types/pg':
+        specifier: ^8.11.11
+        version: 8.20.0
+      tsx:
+        specifier: ^4.19.3
+        version: 4.22.3
+
   packages/core:
     dependencies:
       zod:
@@ -124,6 +143,9 @@ importers:
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../bootstrap
+      '@klm/codebase-indexer':
+        specifier: workspace:*
+        version: link:../codebase-indexer
       '@klm/core':
         specifier: workspace:*
         version: link:../core

@@ -13,6 +13,8 @@
     "db:seed": "pnpm --filter @klm/state-store db:seed",
     "eval": "pnpm --filter @klm/evaluation eval",
     "eval:integration": "pnpm --filter @klm/evaluation eval:integration",
+    "eval:codebase-index": "pnpm --filter @klm/evaluation eval:codebase-index",
+    "index:codebase": "pnpm --filter @klm/codebase-indexer index",
     "eval:e2e": "pnpm --filter @klm/evaluation eval:e2e",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down",
