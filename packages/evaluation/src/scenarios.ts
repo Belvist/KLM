@@ -176,11 +176,17 @@ export async function evalDecisionDedup(): Promise<EvalResult> {
   };
 }
 
+import { runCodebaseActivatorEvals } from "./codebase-activator-eval.js";
+
 export async function runAllEvals(): Promise<EvalResult[]> {
-  return Promise.all([
-    evalInvariantRespect(),
-    evalComplexityPenalty(),
-    evalNoDuplicateUserEvents(),
-    evalDecisionDedup(),
+  const [core, activator] = await Promise.all([
+    Promise.all([
+      evalInvariantRespect(),
+      evalComplexityPenalty(),
+      evalNoDuplicateUserEvents(),
+      evalDecisionDedup(),
+    ]),
+    runCodebaseActivatorEvals(),
   ]);
+  return [...core, ...activator];
 }
