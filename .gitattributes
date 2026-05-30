@@ -1,0 +1,2 @@
+# SQL migrations must use LF so comment lines do not swallow statements on one-line render.
+packages/state-store/migrations/*.sql text eol=lf
