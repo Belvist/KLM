@@ -9,13 +9,7 @@ export const EventTypeSchema = z.enum([
   "file_update",
 ]);
 
-export const EventSourceSchema = z.enum([
-  "chat",
-  "ide",
-  "git",
-  "manual",
-  "system",
-]);
+export const EventSourceSchema = z.enum(["chat", "ide", "git", "manual", "system"]);
 
 export const EventSchema = z.object({
   id: z.string().uuid(),
@@ -38,11 +32,7 @@ export const RejectedAlternativeSchema = z.object({
   reason: z.string(),
 });
 
-export const DecisionStatusSchema = z.enum([
-  "active",
-  "deprecated",
-  "reversed",
-]);
+export const DecisionStatusSchema = z.enum(["active", "deprecated", "reversed"]);
 
 export const DecisionNodeSchema = z.object({
   id: z.string().uuid(),

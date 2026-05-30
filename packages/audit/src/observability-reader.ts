@@ -4,6 +4,7 @@ import {
   type ContentExposureOptions,
   type ExposedTextContent,
 } from "./content-exposure.js";
+import { redactPayload } from "./redact-secrets.js";
 
 export interface PaginationParams {
   projectId: string;
@@ -73,31 +74,6 @@ export function parseLimit(raw?: string): number {
   return Math.min(n, MAX_LIMIT);
 }
 
-function redactValue(key: string, value: unknown): unknown {
-  if (/key|secret|token|password|authorization|apikey/i.test(key)) {
-    return "[redacted]";
-  }
-  if (Array.isArray(value)) {
-    return value.map((item) =>
-      item && typeof item === "object" && !Array.isArray(item)
-        ? redactPayload(item as Record<string, unknown>)
-        : item
-    );
-  }
-  if (value && typeof value === "object") {
-    return redactPayload(value as Record<string, unknown>);
-  }
-  return value;
-}
-
-export function redactPayload(payload: Record<string, unknown>): Record<string, unknown> {
-  const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(payload)) {
-    out[k] = redactValue(k, v);
-  }
-  return out;
-}
-
 export class ObservabilityReader {
   private pool: pg.Pool;
 
@@ -113,6 +89,7 @@ export class ObservabilityReader {
     const exposure = params.contentExposure ?? {
       includeContent: false,
       forceRedactContent: false,
+      redactPreview: false,
     };
     const values: unknown[] = [params.projectId, params.limit + 1];
     let query = `
@@ -211,6 +188,7 @@ export class ObservabilityReader {
     const exposure = params.contentExposure ?? {
       includeContent: false,
       forceRedactContent: false,
+      redactPreview: false,
     };
     const values: unknown[] = [params.projectId, params.limit + 1];
     let query = `

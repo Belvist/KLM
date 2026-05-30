@@ -8,5 +8,5 @@ const { app } = await buildGateway({ logger: true });
 await app.listen({ port: PORT, host: HOST });
 console.log(`KLM Gateway listening on http://${HOST}:${PORT}`);
 console.log(
-  `Store: ${process.env.DATABASE_URL ? "postgres" : process.env.KLM_STATE_PATH ?? ".klm-data"}`
+  `Store: ${process.env.DATABASE_URL ? "postgres" : (process.env.KLM_STATE_PATH ?? ".klm-data")}`
 );

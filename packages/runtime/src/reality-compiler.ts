@@ -30,9 +30,7 @@ export class RealityCompiler {
       type: params.outputType,
       content: fullContent,
       artifacts,
-      warnings: params.verifiedAction.violations
-        .filter((v) => !v.repaired)
-        .map((v) => v.message),
+      warnings: params.verifiedAction.violations.filter((v) => !v.repaired).map((v) => v.message),
       implementationPlan:
         params.intent.qualityLevel === "production"
           ? [

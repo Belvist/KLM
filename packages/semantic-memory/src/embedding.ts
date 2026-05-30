@@ -1,6 +1,20 @@
+import { createHash } from "node:crypto";
+
 export interface EmbeddingService {
   embed(text: string): Promise<number[]>;
   dimensions(): number;
+}
+
+/** Deterministic 1536-d vectors for CI/e2e — no external API. */
+export class MockEmbeddingService implements EmbeddingService {
+  dimensions(): number {
+    return 1536;
+  }
+
+  async embed(text: string): Promise<number[]> {
+    const hash = createHash("sha256").update(text).digest();
+    return Array.from({ length: 1536 }, (_, i) => hash[i % hash.length]! / 127.5 - 1);
+  }
 }
 
 export class OpenAIEmbeddingService implements EmbeddingService {

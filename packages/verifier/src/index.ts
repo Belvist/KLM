@@ -46,9 +46,7 @@ export class CompositeVerifier implements Verifier {
       }
     }
 
-    const criticalViolations = violations.filter(
-      (v) => v.severity === "critical" && !v.repaired
-    );
+    const criticalViolations = violations.filter((v) => v.severity === "critical" && !v.repaired);
 
     let repairedOutput: string | undefined;
     if (violations.length && this.router) {

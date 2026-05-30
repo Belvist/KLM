@@ -147,9 +147,7 @@ export class OpenAIAdapter extends BaseModelAdapter {
   }
 }
 
-function mapFinishReason(
-  reason?: string
-): ModelResponse["finishReason"] {
+function mapFinishReason(reason?: string): ModelResponse["finishReason"] {
   switch (reason) {
     case "stop":
       return "stop";

@@ -85,7 +85,8 @@ export async function evalComplexityPenalty(): Promise<EvalResult> {
   const lowRanked = ranked.find((a) => a.id === low.id)!;
   const highRanked = ranked.find((a) => a.id === high.id)!;
 
-  const debtLowerForLow = (lowRanked.scores as { complexityDebt?: number }).complexityDebt! <
+  const debtLowerForLow =
+    (lowRanked.scores as { complexityDebt?: number }).complexityDebt! <
     (highRanked.scores as { complexityDebt?: number }).complexityDebt!;
 
   return {
@@ -129,9 +130,7 @@ export async function evalNoDuplicateUserEvents(): Promise<EvalResult> {
   });
 
   const events = await store.getEvents(projectId);
-  const userMessages = events.filter(
-    (e) => e.type === "message" && e.content === "user question"
-  );
+  const userMessages = events.filter((e) => e.type === "message" && e.content === "user question");
 
   return {
     name: "no-duplicate-user-events",

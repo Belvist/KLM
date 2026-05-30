@@ -32,10 +32,9 @@ export class PostgreSQLStateStore implements StateStore {
   }
 
   async getProjectState(projectId: string): Promise<ProjectState | null> {
-    const res = await this.pool.query(
-      `SELECT state FROM project_states WHERE id = $1`,
-      [projectId]
-    );
+    const res = await this.pool.query(`SELECT state FROM project_states WHERE id = $1`, [
+      projectId,
+    ]);
     if (!res.rows[0]) return null;
     return ProjectStateSchema.parse(res.rows[0].state);
   }
@@ -92,21 +91,19 @@ export class PostgreSQLStateStore implements StateStore {
        FROM events WHERE project_id = $1 ORDER BY timestamp DESC LIMIT $2`,
       [projectId, limit]
     );
-    return res.rows
-      .reverse()
-      .map((row) =>
-        EventSchema.parse({
-          id: row.id,
-          projectId: row.project_id,
-          userId: row.user_id,
-          type: row.type,
-          content: row.content,
-          timestamp: row.timestamp,
-          source: row.source,
-          importance: row.importance,
-          metadata: row.metadata ?? undefined,
-        })
-      );
+    return res.rows.reverse().map((row) =>
+      EventSchema.parse({
+        id: row.id,
+        projectId: row.project_id,
+        userId: row.user_id,
+        type: row.type,
+        content: row.content,
+        timestamp: row.timestamp,
+        source: row.source,
+        importance: row.importance,
+        metadata: row.metadata ?? undefined,
+      })
+    );
   }
 
   async getDecisions(projectId: string): Promise<DecisionNode[]> {

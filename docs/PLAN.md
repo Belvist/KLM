@@ -20,12 +20,12 @@ Semantic dedup, model_calls telemetry (per-request), opt-in semantic memory, int
 
 Runtime e2e correctness — product testing gate.
 
-| # | Задача | Статус |
-|---|--------|--------|
-| 1 | HTTP API e2e eval (`pnpm eval:e2e`) | ✅ |
-| 2 | Stream → memory update after done eval | ✅ |
-| 3 | MCP shared-store eval (separate PG connection) | ✅ |
-| 4 | Realistic KLM Runtime seed (8+ invariants) | ✅ |
+| #   | Задача                                         | Статус |
+| --- | ---------------------------------------------- | ------ |
+| 1   | HTTP API e2e eval (`pnpm eval:e2e`)            | ✅     |
+| 2   | Stream → memory update after done eval         | ✅     |
+| 3   | MCP shared-store eval (separate PG connection) | ✅     |
+| 4   | Realistic KLM Runtime seed (8+ invariants)     | ✅     |
 
 ---
 
@@ -33,23 +33,52 @@ Runtime e2e correctness — product testing gate.
 
 Observability endpoints + demo/live project split.
 
-| # | Задача | Статус |
-|---|--------|--------|
-| 1 | `GET /v1/projects/:id/events` | ✅ |
-| 2 | `GET /v1/projects/:id/memory-chunks` | ✅ |
-| 3 | `GET /v1/admin/model-calls` | ✅ |
-| 4 | `GET /v1/admin/audit-logs` | ✅ |
-| 5 | Tenant boundary (403 on project mismatch) | ✅ |
-| 6 | Pagination (limit max 100, cursor) | ✅ |
-| 7 | `KLM_DEMO_PROJECT_ID` / `KLM_LIVE_PROJECT_ID` split | ✅ |
-| 8 | Observability e2e eval | ✅ |
+| #   | Задача                                              | Статус |
+| --- | --------------------------------------------------- | ------ |
+| 1   | `GET /v1/projects/:id/events`                       | ✅     |
+| 2   | `GET /v1/projects/:id/memory-chunks`                | ✅     |
+| 3   | `GET /v1/admin/model-calls`                         | ✅     |
+| 4   | `GET /v1/admin/audit-logs`                          | ✅     |
+| 5   | Tenant boundary (403 on project mismatch)           | ✅     |
+| 6   | Pagination (limit max 100, cursor)                  | ✅     |
+| 7   | `KLM_DEMO_PROJECT_ID` / `KLM_LIVE_PROJECT_ID` split | ✅     |
+| 8   | Observability e2e eval                              | ✅     |
 
 **Demo vs live:**
 
-| Project | UUID | Use |
-|---------|------|-----|
-| Demo | `...0003` | `eval:e2e`, `record:demo` |
-| Live | `...0005` | MCP/Cursor, `record:live` |
+| Project | UUID      | Use                       |
+| ------- | --------- | ------------------------- |
+| Demo    | `...0003` | `eval:e2e`, `record:demo` |
+| Live    | `...0005` | MCP/Cursor, `record:live` |
+
+---
+
+## Phase 2.3.1 — ✅ (2026-05-30)
+
+Initial content exposure controls.
+
+| #   | Задача                                                            | Статус |
+| --- | ----------------------------------------------------------------- | ------ |
+| 1   | `contentPreview` / `contentLength` / `contentHash` by default     | ✅     |
+| 2   | `?includeContent=true` opt-in                                     | ✅     |
+| 3   | `KLM_OBSERVABILITY_REDACT_CONTENT=true` force-redact full content | ✅     |
+
+---
+
+## Phase 2.3.2 — ✅ (2026-05-30)
+
+Observability hardening gate.
+
+| #   | Задача                                            | Статус |
+| --- | ------------------------------------------------- | ------ |
+| 1   | Force-redact: `contentPreview` = `[redacted]`     | ✅     |
+| 2   | `redactSecretsInText` on preview + opt-in content | ✅     |
+| 3   | Fully recursive `redactPayload` (nested arrays)   | ✅     |
+| 4   | E2e: memory-chunks redaction with real chunks     | ✅     |
+| 5   | E2e: semantic runtime + mock embeddings + dedup   | ✅     |
+| 6   | `pnpm format:check` in CI                         | ✅     |
+
+**Note:** `/v1/admin/*` = project-scoped dev observability (Bearer + tenant), not enterprise RBAC.
 
 ---
 
@@ -57,22 +86,22 @@ Observability endpoints + demo/live project split.
 
 Codebase indexer — files, functions, routes, imports, schemas.
 
-| # | Задача |
-|---|--------|
-| 1 | File/function/class index |
-| 2 | Route and dependency graph |
-| 3 | Semantic chunks from codebase structure |
+| #   | Задача                                  |
+| --- | --------------------------------------- |
+| 1   | File/function/class index               |
+| 2   | Route and dependency graph              |
+| 3   | Semantic chunks from codebase structure |
 
 ---
 
 ## Phase 3 — после Phase 2.4
 
-| # | Задача |
-|---|--------|
-| 17 | `organizations` / `workspaces` / `users` tables |
-| 18 | SSO / RBAC |
-| 19 | Failed model_calls outcome column |
-| 20 | IVFFlat index for embeddings at scale |
+| #   | Задача                                          |
+| --- | ----------------------------------------------- |
+| 17  | `organizations` / `workspaces` / `users` tables |
+| 18  | SSO / RBAC                                      |
+| 19  | Failed model_calls outcome column               |
+| 20  | IVFFlat index for embeddings at scale           |
 
 ---
 
@@ -122,24 +151,11 @@ Invoke-RestMethod -Uri "http://localhost:3100/v1/projects/00000000-0000-4000-800
 
 ## Журнал
 
-| Дата | Событие |
-|------|---------|
-| 2026-05-29 | Phase 2 product |
-| 2026-05-29 | Phase 2.1 dedup + router audit + CI |
-| 2026-05-29 | Phase 2.2 e2e evals + KLM Runtime seed |
-| 2026-05-29 | Phase 2.3 observability endpoints + demo/live split |
+| Дата       | Событие                                                 |
+| ---------- | ------------------------------------------------------- |
+| 2026-05-29 | Phase 2 product                                         |
+| 2026-05-29 | Phase 2.1 dedup + router audit + CI                     |
+| 2026-05-29 | Phase 2.2 e2e evals + KLM Runtime seed                  |
+| 2026-05-29 | Phase 2.3 observability endpoints + demo/live split     |
 | 2026-05-30 | Phase 2.3.1 content redaction + includeContent controls |
-
----
-
-## Phase 2.3.1 — ✅ (2026-05-30)
-
-Harden observability output against prompt/secret leakage.
-
-| # | Задача | Статус |
-|---|--------|--------|
-| 1 | `contentPreview` / `contentLength` / `contentHash` by default | ✅ |
-| 2 | `?includeContent=true` opt-in for full text | ✅ |
-| 3 | `KLM_OBSERVABILITY_REDACT_CONTENT=true` force-redact | ✅ |
-| 4 | Recursive `redactPayload` for arrays | ✅ |
-| 5 | E2e redaction tests | ✅ |
+| 2026-05-30 | Phase 2.3.2 observability hardening gate                |

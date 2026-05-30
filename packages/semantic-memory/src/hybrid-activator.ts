@@ -21,12 +21,7 @@ export class HybridMemoryActivator implements MemoryActivator {
     memoryTypes: MemoryType[],
     recentEvents: Event[] = []
   ): Promise<ActivatedMemory> {
-    const base = await this.ruleBased.activate(
-      situation,
-      projectState,
-      memoryTypes,
-      recentEvents
-    );
+    const base = await this.ruleBased.activate(situation, projectState, memoryTypes, recentEvents);
 
     const queryText = [situation.intent.rawInput, ...situation.recentContext].join(" ");
     if (!queryText.trim()) {
@@ -49,7 +44,10 @@ export class HybridMemoryActivator implements MemoryActivator {
       const semanticBlock =
         "Semantic memory (vector retrieval):\n" +
         semanticHits
-          .map((h) => `- [${h.chunkType}] ${h.content.slice(0, 300)} (score ${(h.score ?? 0).toFixed(2)})`)
+          .map(
+            (h) =>
+              `- [${h.chunkType}] ${h.content.slice(0, 300)} (score ${(h.score ?? 0).toFixed(2)})`
+          )
           .join("\n");
 
       return {

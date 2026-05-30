@@ -25,9 +25,7 @@ export class LlmMemoryCompiler implements MemoryCompiler {
       return { episodes: [], decisions: [], invariants: [] };
     }
 
-    const transcript = events
-      .map((e) => `[${e.type}] ${e.content}`)
-      .join("\n");
+    const transcript = events.map((e) => `[${e.type}] ${e.content}`).join("\n");
 
     const response = await this.router.generate("memory_compression", {
       messages: [

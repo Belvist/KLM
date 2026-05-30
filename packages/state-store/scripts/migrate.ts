@@ -23,9 +23,7 @@ try {
     )
   `);
 
-  const files = (await readdir(migrationsDir))
-    .filter((f) => f.endsWith(".sql"))
-    .sort();
+  const files = (await readdir(migrationsDir)).filter((f) => f.endsWith(".sql")).sort();
 
   for (const file of files) {
     const version = file.replace(/\.sql$/, "");

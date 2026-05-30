@@ -13,10 +13,7 @@ import { DEMO_IDS, record, tenantHeaders } from "./helpers.js";
  * Simulates MCP reading project://state after API writes to PostgreSQL.
  * Uses a separate PostgreSQLStateStore instance (separate pool = separate process).
  */
-export async function runMcpSharedStoreE2e(
-  pool: pg.Pool,
-  results: EvalResult[]
-): Promise<void> {
+export async function runMcpSharedStoreE2e(pool: pg.Pool, results: EvalResult[]): Promise<void> {
   resetKlmAppForTests();
 
   const audit = new PostgresAuditLogger(process.env.DATABASE_URL!);
@@ -107,12 +104,7 @@ export async function runMcpSharedStoreE2e(
     );
 
     const sawMarker = events.some((e) => e.content.includes(marker));
-    record(
-      results,
-      "mcp-sees-api-user-message",
-      sawMarker,
-      `marker found in events=${sawMarker}`
-    );
+    record(results, "mcp-sees-api-user-message", sawMarker, `marker found in events=${sawMarker}`);
 
     const sawFeedback = events.some((e) => e.type === "feedback");
     record(

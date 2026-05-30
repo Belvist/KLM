@@ -10,22 +10,22 @@
 
 ## Target users
 
-| Segment | Need |
-|---------|------|
-| Solo dev | Persistent project brain in Cursor/IDE |
-| Team | Shared decisions, invariants, audit |
+| Segment    | Need                                                |
+| ---------- | --------------------------------------------------- |
+| Solo dev   | Persistent project brain in Cursor/IDE              |
+| Team       | Shared decisions, invariants, audit                 |
 | Enterprise | PostgreSQL, tenancy, SSO (roadmap), compliance logs |
 
 ## Core product surfaces
 
-| Surface | Role |
-|---------|------|
-| `apps/api` | KLM Gateway (OpenAI-compatible + native API) |
-| `apps/mcp-server` | Cursor / MCP clients |
-| `packages/runtime` | Reasoning loop |
-| `packages/semantic-memory` | Embeddings + pgvector retrieval |
-| `packages/evaluation` | Quality gates (memory, invariants, scorer) |
-| `packages/audit` | Audit + model call logging |
+| Surface                    | Role                                         |
+| -------------------------- | -------------------------------------------- |
+| `apps/api`                 | KLM Gateway (OpenAI-compatible + native API) |
+| `apps/mcp-server`          | Cursor / MCP clients                         |
+| `packages/runtime`         | Reasoning loop                               |
+| `packages/semantic-memory` | Embeddings + pgvector retrieval              |
+| `packages/evaluation`      | Quality gates (memory, invariants, scorer)   |
+| `packages/audit`           | Audit + model call logging                   |
 
 ## Non-goals (v0.x)
 

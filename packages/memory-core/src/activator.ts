@@ -12,16 +12,11 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
       ? projectState.decisions.filter((d) => d.status === "active")
       : [];
 
-    const invariants = memoryTypes.includes("invariants")
-      ? projectState.invariants
-      : [];
+    const invariants = memoryTypes.includes("invariants") ? projectState.invariants : [];
 
     const risks = memoryTypes.includes("risks") ? projectState.risks : [];
 
-    const queryText = [
-      situation.intent.rawInput,
-      ...situation.recentContext,
-    ].join(" ");
+    const queryText = [situation.intent.rawInput, ...situation.recentContext].join(" ");
 
     const relevantDecisions = this.filterByRelevance(activeDecisions, queryText, "decision");
     const relevantInvariants = this.filterByRelevance(invariants, queryText, "rule");
@@ -29,9 +24,7 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
     const contextParts: string[] = [];
 
     if (situation.recentContext.length) {
-      contextParts.push(
-        "Recent conversation:\n" + situation.recentContext.slice(-12).join("\n")
-      );
+      contextParts.push("Recent conversation:\n" + situation.recentContext.slice(-12).join("\n"));
     }
 
     if (recentEvents.length) {
@@ -59,10 +52,7 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
 
     if (relevantInvariants.length) {
       contextParts.push(
-        "Invariants:\n" +
-          relevantInvariants
-            .map((i) => `- [${i.severity}] ${i.rule}`)
-            .join("\n")
+        "Invariants:\n" + relevantInvariants.map((i) => `- [${i.severity}] ${i.rule}`).join("\n")
       );
     }
 
@@ -94,7 +84,10 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
     queryText: string,
     field: "decision" | "rule"
   ): T[] {
-    const tokens = queryText.toLowerCase().split(/\s+/).filter((t) => t.length > 3);
+    const tokens = queryText
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((t) => t.length > 3);
     if (!tokens.length) return items.slice(0, 10);
 
     const scored = items.map((item) => {

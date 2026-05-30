@@ -1,12 +1,16 @@
 import { createHash } from "node:crypto";
+import { redactSecretsInText } from "./redact-secrets.js";
 
 export const CONTENT_PREVIEW_MAX = 200;
+export const REDACTED_PREVIEW = "[redacted]";
 
 export interface ContentExposureOptions {
   /** When true, include full `content` field (unless forceRedactContent). */
   includeContent: boolean;
-  /** Env KLM_OBSERVABILITY_REDACT_CONTENT=true — never expose full content. */
+  /** Env KLM_OBSERVABILITY_REDACT_CONTENT=true — never expose full content or raw preview. */
   forceRedactContent: boolean;
+  /** When true, contentPreview is `[redacted]` (derived from forceRedactContent). */
+  redactPreview: boolean;
 }
 
 export interface ExposedTextContent {
@@ -24,12 +28,17 @@ export function isForceRedactContent(): boolean {
 export function resolveContentExposure(queryIncludeContent?: string): ContentExposureOptions {
   const forceRedactContent = isForceRedactContent();
   const includeContent = !forceRedactContent && queryIncludeContent === "true";
-  return { includeContent, forceRedactContent };
+  return {
+    includeContent,
+    forceRedactContent,
+    redactPreview: forceRedactContent,
+  };
 }
 
 export function contentPreview(raw: string): string {
-  if (raw.length <= CONTENT_PREVIEW_MAX) return raw;
-  return `${raw.slice(0, CONTENT_PREVIEW_MAX)}…`;
+  const sanitized = redactSecretsInText(raw);
+  if (sanitized.length <= CONTENT_PREVIEW_MAX) return sanitized;
+  return `${sanitized.slice(0, CONTENT_PREVIEW_MAX)}…`;
 }
 
 export function contentHash(raw: string): string {
@@ -37,14 +46,18 @@ export function contentHash(raw: string): string {
 }
 
 export function exposeTextContent(raw: string, opts: ContentExposureOptions): ExposedTextContent {
-  const preview = contentPreview(raw);
+  const safePreview =
+    opts.forceRedactContent || opts.redactPreview ? REDACTED_PREVIEW : contentPreview(raw);
+
   const base: ExposedTextContent = {
-    contentPreview: preview,
+    contentPreview: safePreview,
     contentLength: raw.length,
     contentHash: contentHash(raw),
   };
+
   if (opts.includeContent && !opts.forceRedactContent) {
-    return { ...base, content: raw };
+    return { ...base, content: redactSecretsInText(raw) };
   }
+
   return base;
 }

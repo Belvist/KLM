@@ -19,14 +19,16 @@ export class TenantValidationError extends Error {
   }
 }
 
-function header(headers: Record<string, string | string[] | undefined>, key: string): string | undefined {
+function header(
+  headers: Record<string, string | string[] | undefined>,
+  key: string
+): string | undefined {
   const value = headers[key];
   if (Array.isArray(value)) return value[0];
   return value;
 }
 
-const UUID_RE =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 function requireUuid(value: string | undefined, field: string): string {
   if (!value || !UUID_RE.test(value)) {

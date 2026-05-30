@@ -42,7 +42,7 @@ export async function buildGateway(options: BuildGatewayOptions = {}) {
   app.get("/health", async () => ({
     status: "ok",
     service: "klm-gateway",
-    store: process.env.DATABASE_URL ? "postgres" : process.env.KLM_STORE_BACKEND ?? "file",
+    store: process.env.DATABASE_URL ? "postgres" : (process.env.KLM_STORE_BACKEND ?? "file"),
   }));
 
   app.post<{ Body: { input: string; model?: string; client?: ClientType } }>(

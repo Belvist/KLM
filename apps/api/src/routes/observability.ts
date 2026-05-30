@@ -3,10 +3,11 @@ import { ObservabilityReader, parseLimit, resolveContentExposure } from "@klm/au
 import { extractTenant } from "@klm/bootstrap";
 import { assertProjectAccess, resolveScopedProjectId } from "../lib/tenant-access.js";
 
-export function registerObservabilityRoutes(
-  app: FastifyInstance,
-  connectionString: string
-): void {
+/**
+ * Project-scoped observability (dev/local). Protected by Bearer API key + tenant headers.
+ * Not enterprise RBAC admin — see docs/PLAN.md Phase 3.
+ */
+export function registerObservabilityRoutes(app: FastifyInstance, connectionString: string): void {
   const reader = new ObservabilityReader(connectionString);
 
   app.addHook("onClose", async () => {

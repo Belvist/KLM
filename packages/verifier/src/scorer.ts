@@ -49,7 +49,9 @@ function securityScore(action: CandidateAction, projectState: ProjectState): num
   if (text.includes("minimal") && !text.includes("auth") && text.includes("endpoint")) {
     score -= 0.35;
   }
-  const hardInvariants = projectState.invariants.filter((i) => i.severity === "hard" || i.severity === "critical");
+  const hardInvariants = projectState.invariants.filter(
+    (i) => i.severity === "hard" || i.severity === "critical"
+  );
   if (hardInvariants.length && action.estimatedComplexity === "low") {
     score -= 0.1;
   }
@@ -65,15 +67,25 @@ export function scoreAction(
   const isProductionApproach = action.approach.toLowerCase().includes("production");
 
   return {
-    goalFit: clamp(isProductionApproach ? 0.75 : action.estimatedComplexity === "low" ? 0.55 : 0.65),
+    goalFit: clamp(
+      isProductionApproach ? 0.75 : action.estimatedComplexity === "low" ? 0.55 : 0.65
+    ),
     architectureIntegrity: clamp(
       action.affectedModules.length > 0 ? 0.7 : isProductionApproach ? 0.8 : 0.45
     ),
     security: securityScore(action, projectState),
-    scalability: clamp(isProductionApproach ? 0.8 : action.estimatedComplexity === "high" ? 0.65 : 0.4),
+    scalability: clamp(
+      isProductionApproach ? 0.8 : action.estimatedComplexity === "high" ? 0.65 : 0.4
+    ),
     simplicity: clamp(1 - debt),
     futureStability: clamp(scenarioStability),
-    cost: clamp(action.estimatedComplexity === "low" ? 0.2 : action.estimatedComplexity === "medium" ? 0.45 : 0.7),
+    cost: clamp(
+      action.estimatedComplexity === "low"
+        ? 0.2
+        : action.estimatedComplexity === "medium"
+          ? 0.45
+          : 0.7
+    ),
     risk: clamp(debt * 0.6 + (isProductionApproach ? 0.1 : 0.35)),
     complexityDebt: debt,
   };

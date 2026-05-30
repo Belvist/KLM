@@ -7,10 +7,7 @@ import { COMPILE_OUTPUT, E2eMockAdapter } from "./mock-adapter.js";
 import type { EvalResult } from "./helpers.js";
 import { DEMO_IDS, parseSseBody, record, tenantHeaders } from "./helpers.js";
 
-export async function runStreamMemoryE2e(
-  pool: pg.Pool,
-  results: EvalResult[]
-): Promise<void> {
+export async function runStreamMemoryE2e(pool: pg.Pool, results: EvalResult[]): Promise<void> {
   resetKlmAppForTests();
 
   const audit = new PostgresAuditLogger(process.env.DATABASE_URL!);
@@ -53,12 +50,7 @@ export async function runStreamMemoryE2e(
     `status=${response.statusCode} streamedLen=${fullContent.length}`
   );
 
-  record(
-    results,
-    "stream-done-marker",
-    done,
-    `SSE [DONE] received=${done}`
-  );
+  record(results, "stream-done-marker", done, `SSE [DONE] received=${done}`);
 
   record(
     results,
@@ -71,8 +63,7 @@ export async function runStreamMemoryE2e(
     `SELECT COUNT(*)::int AS c FROM events WHERE project_id = $1 AND type = 'feedback'`,
     [DEMO_IDS.project]
   );
-  const newFeedback =
-    (feedbackAfter.rows[0]?.c ?? 0) - (feedbackBefore.rows[0]?.c ?? 0);
+  const newFeedback = (feedbackAfter.rows[0]?.c ?? 0) - (feedbackBefore.rows[0]?.c ?? 0);
 
   record(
     results,
@@ -82,8 +73,7 @@ export async function runStreamMemoryE2e(
   );
 
   const modelCallsAfter = await pool.query(`SELECT COUNT(*)::int AS c FROM model_calls`);
-  const newModelCalls =
-    (modelCallsAfter.rows[0]?.c ?? 0) - (modelCallsBefore.rows[0]?.c ?? 0);
+  const newModelCalls = (modelCallsAfter.rows[0]?.c ?? 0) - (modelCallsBefore.rows[0]?.c ?? 0);
 
   record(
     results,

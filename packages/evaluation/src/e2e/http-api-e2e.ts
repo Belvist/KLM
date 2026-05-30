@@ -7,10 +7,7 @@ import type { EvalResult } from "./helpers.js";
 import { E2eMockAdapter } from "./mock-adapter.js";
 import { DEMO_IDS, record, tenantHeaders } from "./helpers.js";
 
-export async function runHttpApiE2e(
-  pool: pg.Pool,
-  results: EvalResult[]
-): Promise<void> {
+export async function runHttpApiE2e(pool: pg.Pool, results: EvalResult[]): Promise<void> {
   resetKlmAppForTests();
 
   const audit = new PostgresAuditLogger(process.env.DATABASE_URL!);
@@ -68,25 +65,14 @@ export async function runHttpApiE2e(
   );
 
   const modelCallsAfter = await pool.query(`SELECT COUNT(*)::int AS c FROM model_calls`);
-  const newModelCalls =
-    (modelCallsAfter.rows[0]?.c ?? 0) - (modelCallsBefore.rows[0]?.c ?? 0);
+  const newModelCalls = (modelCallsAfter.rows[0]?.c ?? 0) - (modelCallsBefore.rows[0]?.c ?? 0);
 
-  record(
-    results,
-    "http-api-model-calls",
-    newModelCalls >= 1,
-    `new model_calls=${newModelCalls}`
-  );
+  record(results, "http-api-model-calls", newModelCalls >= 1, `new model_calls=${newModelCalls}`);
 
   const auditAfter = await pool.query(`SELECT COUNT(*)::int AS c FROM audit_logs`);
   const newAudit = (auditAfter.rows[0]?.c ?? 0) - (auditBefore.rows[0]?.c ?? 0);
 
-  record(
-    results,
-    "http-api-audit-logs",
-    newAudit >= 1,
-    `new audit_logs=${newAudit}`
-  );
+  record(results, "http-api-audit-logs", newAudit >= 1, `new audit_logs=${newAudit}`);
 
   const stateRes = await app.inject({
     method: "GET",

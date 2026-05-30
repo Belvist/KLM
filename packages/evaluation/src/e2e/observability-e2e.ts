@@ -1,6 +1,6 @@
 import pg from "pg";
 import { buildGateway } from "@klm/api/gateway";
-import { PostgresAuditLogger, redactPayload } from "@klm/audit";
+import { PostgresAuditLogger, redactPayload, REDACTED_PREVIEW } from "@klm/audit";
 import { createKlmApp, resetKlmAppForTests } from "@klm/bootstrap";
 import { ModelRouter } from "@klm/model-adapters";
 import type { EvalResult } from "./helpers.js";
@@ -12,10 +12,7 @@ interface PaginatedResponse<T> {
   nextCursor?: string;
 }
 
-export async function runObservabilityE2e(
-  _pool: pg.Pool,
-  results: EvalResult[]
-): Promise<void> {
+export async function runObservabilityE2e(_pool: pg.Pool, results: EvalResult[]): Promise<void> {
   resetKlmAppForTests();
 
   const audit = new PostgresAuditLogger(process.env.DATABASE_URL!);
@@ -76,11 +73,11 @@ export async function runObservabilityE2e(
     "observability-events-content-redacted-by-default",
     Boolean(
       sampleEvent &&
-        sampleEvent.content === undefined &&
-        typeof sampleEvent.contentPreview === "string" &&
-        typeof sampleEvent.contentLength === "number" &&
-        typeof sampleEvent.contentHash === "string" &&
-        sampleEvent.contentHash.length === 64
+      sampleEvent.content === undefined &&
+      typeof sampleEvent.contentPreview === "string" &&
+      typeof sampleEvent.contentLength === "number" &&
+      typeof sampleEvent.contentHash === "string" &&
+      sampleEvent.contentHash.length === 64
     ),
     `message event has preview/length/hash, no full content`
   );
@@ -109,14 +106,62 @@ export async function runObservabilityE2e(
     headers: tenantHeaders(),
   });
   delete process.env.KLM_OBSERVABILITY_REDACT_CONTENT;
-  const eventsForcedBody = eventsForcedRes.json() as PaginatedResponse<{ content?: string }>;
-  const forcedRedacted = !eventsForcedBody.items?.some((e) => e.content !== undefined);
+  const eventsForcedBody = eventsForcedRes.json() as PaginatedResponse<{
+    content?: string;
+    contentPreview?: string;
+  }>;
+  const forcedSample = eventsForcedBody.items?.[0];
+  const forcedRedacted =
+    !eventsForcedBody.items?.some((e) => e.content !== undefined) &&
+    forcedSample?.contentPreview === REDACTED_PREVIEW;
 
   record(
     results,
     "observability-events-force-redact-env",
     eventsForcedRes.statusCode === 200 && forcedRedacted,
-    `KLM_OBSERVABILITY_REDACT_CONTENT blocks includeContent=${forcedRedacted}`
+    `force-redact: no content, preview=${forcedSample?.contentPreview}`
+  );
+
+  const secretMessage = "Use OPENAI_API_KEY=sk-or-v1-e2etestsecret1234567890 for this task.";
+  await app.inject({
+    method: "POST",
+    url: "/v1/chat/completions",
+    headers: tenantHeaders(),
+    payload: {
+      model: "klm-auto",
+      messages: [{ role: "user", content: secretMessage }],
+      stream: false,
+    },
+  });
+
+  const secretEventsRes = await app.inject({
+    method: "GET",
+    url: `/v1/projects/${DEMO_IDS.project}/events?limit=5`,
+    headers: tenantHeaders(),
+  });
+  const secretEventsBody = secretEventsRes.json() as PaginatedResponse<{ contentPreview?: string }>;
+  const secretPreview = secretEventsBody.items?.find((e) =>
+    e.contentPreview?.includes("OPENAI_API_KEY")
+  )?.contentPreview;
+  const previewSanitized =
+    !secretPreview?.includes("sk-or-v1") && !secretPreview?.includes("e2etestsecret");
+
+  record(
+    results,
+    "observability-events-preview-secret-sanitized",
+    secretEventsRes.statusCode === 200 && previewSanitized,
+    `preview leaks secret=${!previewSanitized}`
+  );
+
+  const nestedRedacted = redactPayload({
+    headers: [[{ authorization: "Bearer nested-secret" }]],
+  }) as { headers: Array<Array<{ authorization: string }>> };
+
+  record(
+    results,
+    "observability-redact-payload-nested-arrays",
+    nestedRedacted.headers[0]?.[0]?.authorization === "[redacted]",
+    `nested array secrets redacted=${nestedRedacted.headers[0]?.[0]?.authorization === "[redacted]"}`
   );
 
   const arrayRedacted = redactPayload({
@@ -127,7 +172,7 @@ export async function runObservabilityE2e(
     results,
     "observability-redact-payload-arrays",
     arrayRedacted.headers[0]?.authorization === "[redacted]",
-    `nested array secrets redacted=${arrayRedacted.headers[0]?.authorization === "[redacted]"}`
+    `flat array secrets redacted=${arrayRedacted.headers[0]?.authorization === "[redacted]"}`
   );
 
   const modelCallsRes = await app.inject({
@@ -136,7 +181,10 @@ export async function runObservabilityE2e(
     headers: tenantHeaders(),
   });
 
-  const modelCallsBody = modelCallsRes.json() as PaginatedResponse<{ model: string; taskType: string }>;
+  const modelCallsBody = modelCallsRes.json() as PaginatedResponse<{
+    model: string;
+    taskType: string;
+  }>;
 
   record(
     results,
@@ -172,7 +220,7 @@ export async function runObservabilityE2e(
     results,
     "observability-memory-chunks",
     chunksRes.statusCode === 200 && Array.isArray(chunksBody.items),
-    `status=${chunksRes.statusCode} count=${chunksBody.items?.length ?? 0}`
+    `status=${chunksRes.statusCode} count=${chunksBody.items?.length ?? 0} (content redaction tested in semantic-memory e2e)`
   );
 
   const wrongProjectRes = await app.inject({

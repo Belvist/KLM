@@ -73,14 +73,14 @@ KLM analyze: проанализируй архитектуру packages/runtime 
 
 ## Доступные MCP tools
 
-| Tool / Resource | Что делает |
-|-----------------|------------|
-| `project://state` | ProjectState из PostgreSQL |
-| `project://decisions` | Решения проекта |
-| `project://invariants` | Архитектурные законы |
-| `klm_get_project_memory` | State + decisions + invariants + events |
-| `klm_verify_code` | Проверка текста/кода против invariants |
-| `klm_analyze_task` | Полный KlmRuntime loop (нужен model API key) |
+| Tool / Resource          | Что делает                                   |
+| ------------------------ | -------------------------------------------- |
+| `project://state`        | ProjectState из PostgreSQL                   |
+| `project://decisions`    | Решения проекта                              |
+| `project://invariants`   | Архитектурные законы                         |
+| `klm_get_project_memory` | State + decisions + invariants + events      |
+| `klm_verify_code`        | Проверка текста/кода против invariants       |
+| `klm_analyze_task`       | Полный KlmRuntime loop (нужен model API key) |
 
 ---
 
@@ -96,11 +96,11 @@ KLM analyze: проанализируй архитектуру packages/runtime 
 
 ## Частые проблемы
 
-| Симптом | Причина |
-|---------|---------|
-| MCP красный | Docker не запущен / нет `pnpm install` / неверный путь |
-| Пустая память | Не делали `db:seed` |
-| Агент не вызывает KLM | Agent mode + rule `klm-auto-memory` + Reload MCP |
+| Симптом               | Причина                                                |
+| --------------------- | ------------------------------------------------------ |
+| MCP красный           | Docker не запущен / нет `pnpm install` / неверный путь |
+| Пустая память         | Не делали `db:seed`                                    |
+| Агент не вызывает KLM | Agent mode + rule `klm-auto-memory` + Reload MCP       |
 
 ---
 
@@ -114,11 +114,11 @@ Cursor **не** подключает KLM к каждому сообщению с
 
 Агент **должен** без напоминания:
 
-| Когда | MCP tool |
-|-------|----------|
-| Начало задачи | `klm_get_project_memory` |
-| Перед кодом / архитектурой | `klm_verify_code` |
-| После значимой работы | `klm_analyze_task` («Record to project memory: …») |
+| Когда                      | MCP tool                                           |
+| -------------------------- | -------------------------------------------------- |
+| Начало задачи              | `klm_get_project_memory`                           |
+| Перед кодом / архитектурой | `klm_verify_code`                                  |
+| После значимой работы      | `klm_analyze_task` («Record to project memory: …») |
 
 Открой workspace **`klm-runtime`** как корень — иначе rule/MCP могут не подхватиться.
 
@@ -142,6 +142,7 @@ Cursor **не** подключает KLM к каждому сообщению с
 [ ] Docker + seed
 [ ] Rule klm-auto-memory активен (Settings → Rules)
 ```
+
 | Analyze падает | Нет `OPENROUTER_API_KEY` в mcp.json |
 
 ---

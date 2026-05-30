@@ -1,10 +1,6 @@
 export type { AuditEntry, AuditLogger, ModelCallEntry } from "./types.js";
 export { auditFromTenant } from "./types.js";
-export {
-  PostgresAuditLogger,
-  ConsoleAuditLogger,
-  CompositeAuditLogger,
-} from "./postgres-audit.js";
+export { PostgresAuditLogger, ConsoleAuditLogger, CompositeAuditLogger } from "./postgres-audit.js";
 
 import { PostgresAuditLogger, ConsoleAuditLogger, CompositeAuditLogger } from "./postgres-audit.js";
 import type { AuditLogger } from "./types.js";
@@ -17,11 +13,8 @@ export function createAuditLogger(connectionString?: string): AuditLogger {
   return new CompositeAuditLogger(loggers);
 }
 
-export {
-  ObservabilityReader,
-  parseLimit,
-  redactPayload,
-} from "./observability-reader.js";
+export { ObservabilityReader, parseLimit } from "./observability-reader.js";
+export { redactPayload, redactSecretsInText, redactAny } from "./redact-secrets.js";
 export {
   resolveContentExposure,
   exposeTextContent,
@@ -29,6 +22,7 @@ export {
   contentHash,
   isForceRedactContent,
   CONTENT_PREVIEW_MAX,
+  REDACTED_PREVIEW,
 } from "./content-exposure.js";
 export type {
   EventRow,

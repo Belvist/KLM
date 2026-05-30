@@ -8,9 +8,5 @@ export type {
 export { RuleBasedMemoryActivator } from "./activator.js";
 export { LlmMemoryCompiler, BasicMemoryUpdater } from "./compiler.js";
 export { MemoryPipeline } from "./memory-pipeline.js";
-export {
-  normalizeMemoryText,
-  decisionAlreadyExists,
-  invariantAlreadyExists,
-} from "./dedup.js";
+export { normalizeMemoryText, decisionAlreadyExists, invariantAlreadyExists } from "./dedup.js";
 export type { MemoryPipelineConfig } from "./memory-pipeline.js";

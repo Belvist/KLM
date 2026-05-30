@@ -54,11 +54,26 @@ function buildProjectState(
     architecture: {
       summary: "Client → KLM Gateway → Runtime (memory, verifier) → Model Router → providers",
       components: [
-        { id: "api", name: "API Gateway", role: "HTTP entry (OpenAI-compat + native)", dependencies: ["runtime"] },
+        {
+          id: "api",
+          name: "API Gateway",
+          role: "HTTP entry (OpenAI-compat + native)",
+          dependencies: ["runtime"],
+        },
         { id: "mcp", name: "MCP Server", role: "IDE client (Cursor)", dependencies: ["runtime"] },
-        { id: "runtime", name: "KlmRuntime", role: "Reasoning loop", dependencies: ["store", "router"] },
+        {
+          id: "runtime",
+          name: "KlmRuntime",
+          role: "Reasoning loop",
+          dependencies: ["store", "router"],
+        },
         { id: "store", name: "PostgreSQL StateStore", role: "Shared memory", dependencies: [] },
-        { id: "router", name: "ModelRouter", role: "Replaceable model backends", dependencies: ["audit"] },
+        {
+          id: "router",
+          name: "ModelRouter",
+          role: "Replaceable model backends",
+          dependencies: ["audit"],
+        },
       ],
       dataFlows: [
         { from: "api", to: "runtime", description: "KlmRequest with tenant context" },
@@ -75,16 +90,76 @@ function buildProjectState(
       tools: ["pnpm", "Zod"],
     },
     invariants: [
-      makeInvariant(projectId, "Model is replaceable", "LLM is compute; KLM owns memory and state", "critical", ["runtime", "router"]),
-      makeInvariant(projectId, "Memory and state must persist", "Project intelligence survives across sessions", "critical", ["store"]),
-      makeInvariant(projectId, "API and MCP must share the same store", "Cursor and HTTP see one project memory", "critical", ["api", "mcp"]),
-      makeInvariant(projectId, "User events must not be duplicated", "User message saved once in runtime", "hard", ["runtime", "memory-core"]),
-      makeInvariant(projectId, "Decisions and invariants must be deduplicated", "No duplicate architectural rules", "hard", ["store", "memory-core"]),
-      makeInvariant(projectId, "Production tenancy requires fixed X-KLM headers", "No random UUID fallback in production", "critical", ["api", "mcp"]),
-      makeInvariant(projectId, "Every model call must be audited", "model_calls row per generate/stream", "hard", ["router", "audit"]),
-      makeInvariant(projectId, "Semantic memory must not duplicate chunks", "One chunk per project/type/source", "hard", ["semantic-memory"]),
-      makeInvariant(projectId, "Every endpoint must have an auth policy", "Security and audit compliance", "critical", ["api"]),
-      makeInvariant(projectId, "Every public endpoint must have rate limiting", "DDoS protection", "hard", ["api"]),
+      makeInvariant(
+        projectId,
+        "Model is replaceable",
+        "LLM is compute; KLM owns memory and state",
+        "critical",
+        ["runtime", "router"]
+      ),
+      makeInvariant(
+        projectId,
+        "Memory and state must persist",
+        "Project intelligence survives across sessions",
+        "critical",
+        ["store"]
+      ),
+      makeInvariant(
+        projectId,
+        "API and MCP must share the same store",
+        "Cursor and HTTP see one project memory",
+        "critical",
+        ["api", "mcp"]
+      ),
+      makeInvariant(
+        projectId,
+        "User events must not be duplicated",
+        "User message saved once in runtime",
+        "hard",
+        ["runtime", "memory-core"]
+      ),
+      makeInvariant(
+        projectId,
+        "Decisions and invariants must be deduplicated",
+        "No duplicate architectural rules",
+        "hard",
+        ["store", "memory-core"]
+      ),
+      makeInvariant(
+        projectId,
+        "Production tenancy requires fixed X-KLM headers",
+        "No random UUID fallback in production",
+        "critical",
+        ["api", "mcp"]
+      ),
+      makeInvariant(
+        projectId,
+        "Every model call must be audited",
+        "model_calls row per generate/stream",
+        "hard",
+        ["router", "audit"]
+      ),
+      makeInvariant(
+        projectId,
+        "Semantic memory must not duplicate chunks",
+        "One chunk per project/type/source",
+        "hard",
+        ["semantic-memory"]
+      ),
+      makeInvariant(
+        projectId,
+        "Every endpoint must have an auth policy",
+        "Security and audit compliance",
+        "critical",
+        ["api"]
+      ),
+      makeInvariant(
+        projectId,
+        "Every public endpoint must have rate limiting",
+        "DDoS protection",
+        "hard",
+        ["api"]
+      ),
     ],
     decisions: [
       {
@@ -92,7 +167,9 @@ function buildProjectState(
         projectId,
         decision: "Auth must be centralized",
         reason: ["Lower security risk", "Simpler audit", "Billing needs stable identity"],
-        rejectedAlternatives: [{ option: "Auth per microservice", reason: "Inconsistent permissions" }],
+        rejectedAlternatives: [
+          { option: "Auth per microservice", reason: "Inconsistent permissions" },
+        ],
         consequencesExpected: ["All endpoints pass AuthBoundary"],
         consequencesObserved: [],
         linkedFiles: [],
@@ -106,7 +183,9 @@ function buildProjectState(
         projectId,
         decision: "PostgreSQL-first shared store for API and MCP",
         reason: ["Cross-process memory", "Production persistence", "Audit and semantic memory"],
-        rejectedAlternatives: [{ option: "In-memory only", reason: "No shared state between processes" }],
+        rejectedAlternatives: [
+          { option: "In-memory only", reason: "No shared state between processes" },
+        ],
         consequencesExpected: ["API and MCP see same project_states and events"],
         consequencesObserved: [],
         linkedFiles: [],
@@ -137,8 +216,18 @@ function buildProjectState(
       },
     ],
     roadmap: [
-      { id: randomUUID(), title: "Phase 2.3 observability endpoints", status: "in_progress", priority: "high" },
-      { id: randomUUID(), title: "Phase 2.4 codebase indexer", status: "planned", priority: "medium" },
+      {
+        id: randomUUID(),
+        title: "Phase 2.3 observability endpoints",
+        status: "in_progress",
+        priority: "high",
+      },
+      {
+        id: randomUUID(),
+        title: "Phase 2.4 codebase indexer",
+        status: "planned",
+        priority: "medium",
+      },
       { id: randomUUID(), title: "SSO / RBAC", status: "planned", priority: "low" },
     ],
     codebaseMap: {
@@ -170,7 +259,11 @@ const liveState = buildProjectState(
 
 const pool = new pg.Pool({ connectionString });
 
-async function seedProject(projectId: string, workspaceId: string, state: ReturnType<typeof buildProjectState>) {
+async function seedProject(
+  projectId: string,
+  workspaceId: string,
+  state: ReturnType<typeof buildProjectState>
+) {
   await pool.query(
     `INSERT INTO project_states (id, workspace_id, state, updated_at)
      VALUES ($1, $2, $3::jsonb, NOW())

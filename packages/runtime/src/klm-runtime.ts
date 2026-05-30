@@ -1,12 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { buildConversationContext } from "@klm/core";
-import type {
-  Event,
-  KlmRequest,
-  KlmResponse,
-  ProjectState,
-  Situation,
-} from "@klm/core";
+import type { Event, KlmRequest, KlmResponse, ProjectState, Situation } from "@klm/core";
 import type { AuditLogger } from "@klm/audit";
 import { auditFromTenant } from "@klm/audit";
 import type { MemoryActivator } from "@klm/memory-core";
@@ -40,8 +34,7 @@ export class KlmRuntime {
 
   constructor(private config: KlmRuntimeConfig) {
     this.intentEngine = new IntentEngine(config.router);
-    this.memoryActivator =
-      config.memoryActivator ?? new RuleBasedMemoryActivator();
+    this.memoryActivator = config.memoryActivator ?? new RuleBasedMemoryActivator();
     this.memoryPipeline =
       config.memoryPipeline ??
       new MemoryPipeline({
@@ -196,9 +189,7 @@ export class KlmRuntime {
       projectId: tenant.projectId,
     };
 
-    const recentContext = messageHistory?.length
-      ? buildConversationContext(messageHistory)
-      : [];
+    const recentContext = messageHistory?.length ? buildConversationContext(messageHistory) : [];
 
     let projectState = await this.config.store.getProjectState(projectId);
     if (!projectState) {
@@ -215,14 +206,7 @@ export class KlmRuntime {
       projectId,
       userId,
       recentContext,
-      activatedMemoryTypes: [
-        "decisions",
-        "invariants",
-        "risks",
-        "codebase",
-        "roadmap",
-        "temporal",
-      ],
+      activatedMemoryTypes: ["decisions", "invariants", "risks", "codebase", "roadmap", "temporal"],
     };
 
     const memoryTypes: MemoryType[] = [
@@ -304,10 +288,7 @@ export class KlmRuntime {
     await this.config.store.appendEvent(event);
   }
 
-  private async ensureProject(
-    projectId: string,
-    workspaceId: string
-  ): Promise<ProjectState> {
+  private async ensureProject(projectId: string, workspaceId: string): Promise<ProjectState> {
     const state = await this.config.store.getProjectState(projectId);
     if (state) return state;
 

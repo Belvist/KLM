@@ -15,7 +15,8 @@ export class OpenRouterAdapter extends OpenAIAdapter {
       baseUrl: "https://openrouter.ai/api/v1",
       defaultModel: config.defaultModel ?? "anthropic/claude-sonnet-4",
       extraHeaders: {
-        "HTTP-Referer": process.env.KLM_APP_URL ?? process.env.APP_URL ?? "https://github.com/Belvist/KLM",
+        "HTTP-Referer":
+          process.env.KLM_APP_URL ?? process.env.APP_URL ?? "https://github.com/Belvist/KLM",
         "X-Title": process.env.KLM_APP_NAME ?? "KLM Runtime",
       },
     });

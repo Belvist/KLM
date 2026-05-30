@@ -48,6 +48,8 @@ jobs:
 
       - run: pnpm typecheck
 
+      - run: pnpm format:check
+
       - run: pnpm test
 
       - run: pnpm db:migrate

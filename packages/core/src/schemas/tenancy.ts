@@ -1,10 +1,6 @@
 import { z } from "zod";
 
-export const OrganizationPlanSchema = z.enum([
-  "personal",
-  "team",
-  "enterprise",
-]);
+export const OrganizationPlanSchema = z.enum(["personal", "team", "enterprise"]);
 
 export const OrganizationSchema = z.object({
   id: z.string().uuid(),
@@ -33,11 +29,7 @@ export const WorkspaceSchema = z.object({
 
 export type Workspace = z.infer<typeof WorkspaceSchema>;
 
-export const RepositoryProviderSchema = z.enum([
-  "github",
-  "gitlab",
-  "local",
-]);
+export const RepositoryProviderSchema = z.enum(["github", "gitlab", "local"]);
 
 export const RepositorySchema = z.object({
   id: z.string().uuid(),

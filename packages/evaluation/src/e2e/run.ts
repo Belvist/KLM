@@ -2,6 +2,7 @@ import pg from "pg";
 import { runHttpApiE2e } from "./http-api-e2e.js";
 import { runMcpSharedStoreE2e } from "./mcp-shared-store-e2e.js";
 import { runObservabilityE2e } from "./observability-e2e.js";
+import { runSemanticMemoryE2e } from "./semantic-memory-e2e.js";
 import { runStreamMemoryE2e } from "./stream-memory-e2e.js";
 import type { EvalResult } from "./helpers.js";
 import { printResults } from "./helpers.js";
@@ -19,13 +20,14 @@ async function main(): Promise<void> {
   try {
     await runHttpApiE2e(pool, results);
     await runObservabilityE2e(pool, results);
+    await runSemanticMemoryE2e(pool, results);
     await runStreamMemoryE2e(pool, results);
     await runMcpSharedStoreE2e(pool, results);
   } finally {
     await pool.end();
   }
 
-  const failed = printResults(results, "KLM E2E Evaluation (Phase 2.3)");
+  const failed = printResults(results, "KLM E2E Evaluation (Phase 2.3.2)");
   if (failed > 0) {
     process.exit(1);
   }

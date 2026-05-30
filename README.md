@@ -29,11 +29,11 @@ pnpm dev:mcp    # MCP server for Cursor
 
 ## Product stack (Phase 2)
 
-| Package | Role |
-|---------|------|
+| Package                | Role                                           |
+| ---------------------- | ---------------------------------------------- |
 | `@klm/semantic-memory` | OpenAI embeddings + pgvector hybrid activation |
-| `@klm/audit` | Audit logs + model call telemetry |
-| `@klm/evaluation` | Quality gate: `pnpm eval` |
+| `@klm/audit`           | Audit logs + model call telemetry              |
+| `@klm/evaluation`      | Quality gate: `pnpm eval`                      |
 
 ```bash
 pnpm docker:up && pnpm db:migrate && pnpm db:seed
@@ -77,16 +77,16 @@ Works with Continue, Open WebUI, custom clients — same pattern as OpenRouter.
 
 ## Architecture
 
-| Layer | Package | Role |
-|-------|---------|------|
-| Schemas | `@klm/core` | Event, Decision, Invariant, ProjectState, tenancy |
-| State | `@klm/state-store` | Persistent project state (in-memory → PostgreSQL) |
-| Memory | `@klm/memory-core` | Event → Episode → Decision → Invariant pipeline |
-| Models | `@klm/model-adapters` | Provider-agnostic router (BYOK) |
-| Verifier | `@klm/verifier` | Invariant & decision conflict checks |
-| Runtime | `@klm/runtime` | Main reasoning loop |
-| Gateway | `@klm/api` | OpenAI-compatible + native API |
-| MCP | `@klm/mcp-server` | Cursor / Claude / VS Code integration |
+| Layer    | Package               | Role                                              |
+| -------- | --------------------- | ------------------------------------------------- |
+| Schemas  | `@klm/core`           | Event, Decision, Invariant, ProjectState, tenancy |
+| State    | `@klm/state-store`    | Persistent project state (in-memory → PostgreSQL) |
+| Memory   | `@klm/memory-core`    | Event → Episode → Decision → Invariant pipeline   |
+| Models   | `@klm/model-adapters` | Provider-agnostic router (BYOK)                   |
+| Verifier | `@klm/verifier`       | Invariant & decision conflict checks              |
+| Runtime  | `@klm/runtime`        | Main reasoning loop                               |
+| Gateway  | `@klm/api`            | OpenAI-compatible + native API                    |
+| MCP      | `@klm/mcp-server`     | Cursor / Claude / VS Code integration             |
 
 ## Core law
 

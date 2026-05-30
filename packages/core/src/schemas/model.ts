@@ -21,12 +21,7 @@ export const ModelCapabilitySchema = z.object({
 
 export type ModelCapability = z.infer<typeof ModelCapabilitySchema>;
 
-export const ModelMessageRoleSchema = z.enum([
-  "system",
-  "user",
-  "assistant",
-  "tool",
-]);
+export const ModelMessageRoleSchema = z.enum(["system", "user", "assistant", "tool"]);
 
 export const ModelMessageSchema = z.object({
   role: ModelMessageRoleSchema,
@@ -94,10 +89,7 @@ export const CostEstimateSchema = z.object({
 
 export type CostEstimate = z.infer<typeof CostEstimateSchema>;
 
-export const RoutingPolicySchema = z.record(
-  ReasoningTaskTypeSchema,
-  z.string()
-);
+export const RoutingPolicySchema = z.record(ReasoningTaskTypeSchema, z.string());
 
 export type RoutingPolicy = z.infer<typeof RoutingPolicySchema>;
 

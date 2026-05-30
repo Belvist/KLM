@@ -1,7 +1,7 @@
 import { createAuditLogger, type AuditLogger } from "@klm/audit";
 import { ModelRouter } from "@klm/model-adapters";
 import { KlmRuntime } from "@klm/runtime";
-import { createSemanticStack } from "@klm/semantic-memory";
+import { createSemanticStack, isSemanticMemoryEnabled } from "@klm/semantic-memory";
 import { createStateStore, resetSharedStoreForTests, type StateStore } from "@klm/state-store";
 
 export { extractTenant, getKlmEnvironment, TenantValidationError } from "./tenant.js";
@@ -36,10 +36,7 @@ export async function createKlmApp(options: CreateKlmAppOptions = {}): Promise<K
   const router = options.router ?? new ModelRouter({ audit });
 
   const databaseUrl = process.env.DATABASE_URL;
-  const semanticEnabled =
-    process.env.KLM_SEMANTIC_MEMORY === "true" &&
-    Boolean(databaseUrl) &&
-    Boolean(process.env.OPENAI_API_KEY);
+  const semanticEnabled = isSemanticMemoryEnabled(databaseUrl);
 
   let runtime: KlmRuntime;
 

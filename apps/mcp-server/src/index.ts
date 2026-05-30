@@ -146,19 +146,24 @@ server.tool(
   }
 );
 
-server.prompt("klm-plan", "Create an implementation plan using KLM project memory", {
-  task: z.string().optional(),
-}, ({ task }) => ({
-  messages: [
-    {
-      role: "user" as const,
-      content: {
-        type: "text" as const,
-        text: `Plan using KLM project state:\n${task ?? ""}`,
+server.prompt(
+  "klm-plan",
+  "Create an implementation plan using KLM project memory",
+  {
+    task: z.string().optional(),
+  },
+  ({ task }) => ({
+    messages: [
+      {
+        role: "user" as const,
+        content: {
+          type: "text" as const,
+          text: `Plan using KLM project state:\n${task ?? ""}`,
+        },
       },
-    },
-  ],
-}));
+    ],
+  })
+);
 
 async function main() {
   const transport = new StdioServerTransport();
