@@ -33,7 +33,7 @@ async function main(): Promise<void> {
     await pool.end();
   }
 
-  const failed = printResults(results, "KLM E2E Evaluation (Phase 2.6)");
+  const failed = printResults(results, "KLM E2E Evaluation (Phase 2.6.1)");
   if (failed > 0) {
     process.exit(1);
   }

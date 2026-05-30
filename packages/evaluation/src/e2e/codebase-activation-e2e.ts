@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
@@ -107,7 +108,7 @@ async function chatOnce(
   connectionString: string,
   headers: Record<string, string>,
   userMessage: string
-): Promise<{ statusCode: number; adapter: CapturingMockAdapter }> {
+): Promise<{ statusCode: number; adapter: CapturingMockAdapter; body: Record<string, unknown> }> {
   resetKlmAppForTests();
   const audit = new PostgresAuditLogger(connectionString);
   const adapter = new CapturingMockAdapter();
@@ -130,7 +131,33 @@ async function chatOnce(
   });
 
   await app.close();
-  return { statusCode: response.statusCode, adapter };
+  const body = (response.json() as Record<string, unknown>) ?? {};
+  return { statusCode: response.statusCode, adapter, body };
+}
+
+interface CodebaseActivationPayload {
+  activationUsed?: boolean;
+  reason?: string;
+  searchTerms?: string[];
+  counts?: { files?: number; routes?: number; symbols?: number; dependencies?: number };
+}
+
+async function fetchActivationAudit(
+  pool: pg.Pool,
+  requestId: string
+): Promise<CodebaseActivationPayload | undefined> {
+  const res = await pool.query<{ payload: CodebaseActivationPayload }>(
+    `SELECT payload FROM audit_logs
+     WHERE request_id = $1::uuid AND action = 'codebase_activation'
+     ORDER BY created_at DESC LIMIT 1`,
+    [requestId]
+  );
+  return res.rows[0]?.payload;
+}
+
+function klmActivation(body: Record<string, unknown>): CodebaseActivationPayload | undefined {
+  const klm = body.klm as { codebaseActivation?: CodebaseActivationPayload } | undefined;
+  return klm?.codebaseActivation;
 }
 
 export async function runCodebaseActivationE2e(
@@ -184,6 +211,41 @@ export async function runCodebaseActivationE2e(
 
     record(
       results,
+      "codebase-activation-no-json-in-compile-prompt",
+      !compileBlob.includes('"codebaseActivation"') && !compileBlob.includes("codebaseActivation:"),
+      `compile prompt polluted with observability JSON=${compileBlob.includes('"codebaseActivation"')}`
+    );
+
+    const obsRequestId = randomUUID();
+    const obsRun = await chatOnce(
+      connectionString,
+      tenantHeaders(obsRequestId),
+      "Where is GET /health defined?"
+    );
+    const obsKlm = klmActivation(obsRun.body);
+    const obsAudit = await fetchActivationAudit(pool, obsRequestId);
+    record(
+      results,
+      "codebase-activation-observability-response",
+      obsRun.statusCode === 200 &&
+        obsKlm?.activationUsed === true &&
+        obsKlm.reason === "activated" &&
+        (obsKlm.counts?.routes ?? 0) > 0,
+      `klm activationUsed=${obsKlm?.activationUsed} reason=${obsKlm?.reason} routes=${obsKlm?.counts?.routes}`
+    );
+    const auditOk =
+      obsAudit?.activationUsed === true &&
+      obsAudit?.reason === "activated" &&
+      Array.isArray(obsAudit?.searchTerms);
+    record(
+      results,
+      "codebase-activation-observability-audit",
+      auditOk,
+      `audit present=${Boolean(obsAudit)} activationUsed=${obsAudit?.activationUsed}`
+    );
+
+    record(
+      results,
       "codebase-activation-no-secrets-in-prompt",
       !activationBlock.includes("BEGIN RSA PRIVATE KEY") &&
         !activationBlock.includes("OPENAI_API_KEY="),
@@ -233,17 +295,26 @@ export async function runCodebaseActivationE2e(
       `status=${limitRun.statusCode} bullets=${bulletCount} (max 100)`
     );
 
+    const secretRequestId = randomUUID();
     const secretRun = await chatOnce(
       connectionString,
-      tenantHeaders(),
+      tenantHeaders(secretRequestId),
       `Find GET /health. My token is ${USER_SECRET_MARKER} do not log it.`
     );
     const secretBlock = codebaseActivationBlock(compilePrompt(secretRun.adapter));
+    const secretAudit = await fetchActivationAudit(pool, secretRequestId);
+    const auditTermsBlob = JSON.stringify(secretAudit?.searchTerms ?? []);
     record(
       results,
       "codebase-activation-no-user-input-leak",
       secretRun.statusCode === 200 && !secretBlock.includes(USER_SECRET_MARKER),
       `user secret in activation block=${secretBlock.includes(USER_SECRET_MARKER)}`
+    );
+    record(
+      results,
+      "codebase-activation-audit-terms-no-secret",
+      !auditTermsBlob.includes(USER_SECRET_MARKER),
+      `secret in audit searchTerms=${auditTermsBlob.includes(USER_SECRET_MARKER)}`
     );
 
     await clearCodeIndex(pool, LIVE_IDS.project);
@@ -285,12 +356,24 @@ export async function runCodebaseActivationE2e(
   delete process.env.KLM_CODEBASE_ACTIVATION;
   delete process.env.KLM_CODEBASE_ACTIVATION_LIMIT;
 
-  const disabledRun = await chatOnce(connectionString, tenantHeaders(), "Where is GET /health?");
+  const disabledRequestId = randomUUID();
+  const disabledRun = await chatOnce(
+    connectionString,
+    tenantHeaders(disabledRequestId),
+    "Where is GET /health?"
+  );
   const compileOff = compilePrompt(disabledRun.adapter);
+  const disabledAudit = await fetchActivationAudit(pool, disabledRequestId);
   record(
     results,
     "codebase-activation-disabled-skips-block",
     !compileOff.includes("Indexed codebase context"),
     `activation off → no codebase block (${compileOff.includes("Indexed codebase context")})`
+  );
+  record(
+    results,
+    "codebase-activation-disabled-audit",
+    disabledAudit?.activationUsed === false && disabledAudit.reason === "disabled",
+    `audit activationUsed=${disabledAudit?.activationUsed} reason=${disabledAudit?.reason}`
   );
 }

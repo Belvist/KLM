@@ -4,6 +4,7 @@ import {
   countActivationBlockItems,
   formatCodebaseActivationBlock,
   resolveCodebaseActivationLimit,
+  sanitizeActivationSearchTerms,
   trimActivationSearchResult,
   type CodebaseQueryReader,
   type CodebaseSearchResult,
@@ -179,8 +180,11 @@ export async function evalCodebaseActivationFailSoft(): Promise<EvalResult> {
     ]);
     return {
       name: "codebase-activation-fail-soft-reader-error",
-      passed: result.contextSummary === "BASE_ONLY",
-      message: result.contextSummary,
+      passed:
+        result.contextSummary === "BASE_ONLY" &&
+        result.codebaseActivation?.reason === "error" &&
+        result.codebaseActivation.activationUsed === false,
+      message: `summary=${result.contextSummary} reason=${result.codebaseActivation?.reason}`,
     };
   } catch (err) {
     return {
@@ -224,6 +228,56 @@ export async function evalCodebaseActivationNoUserInputInBlock(): Promise<EvalRe
   };
 }
 
+export async function evalCodebaseActivationSanitizeTerms(): Promise<EvalResult> {
+  const secret = "sk-e2e-sanitize-marker-abc123456789";
+  const sanitized = sanitizeActivationSearchTerms(["/health", secret, "buildGateway"]);
+  const passed =
+    sanitized.includes("/health") &&
+    sanitized.includes("buildGateway") &&
+    !sanitized.some((t) => t.includes(secret));
+
+  return {
+    name: "codebase-activation-sanitize-search-terms",
+    passed,
+    message: `terms=${sanitized.join(",")}`,
+  };
+}
+
+export async function evalCodebaseActivationTermBounds(): Promise<EvalResult> {
+  const longTerm = "x".repeat(200);
+  const manyTerms = Array.from({ length: 20 }, (_, i) => `term${i}`);
+  const sanitized = sanitizeActivationSearchTerms([longTerm, ...manyTerms]);
+  const maxLen = sanitized.reduce((m, t) => Math.max(m, t.length), 0);
+
+  return {
+    name: "codebase-activation-search-terms-bounded",
+    passed: sanitized.length <= 10 && maxLen <= 80,
+    message: `count=${sanitized.length} maxLen=${maxLen}`,
+  };
+}
+
+export async function evalPublicActivationReportSafe(): Promise<EvalResult> {
+  const { publicCodebaseActivationReport } = await import("@klm/core");
+  const publicReport = publicCodebaseActivationReport({
+    activationUsed: true,
+    reason: "error",
+    searchTerms: ["a".repeat(120)],
+    counts: { files: 1, routes: 2, symbols: 3, dependencies: 4 },
+  });
+  const blob = JSON.stringify(publicReport);
+  const passed =
+    publicReport.searchTerms[0]!.length <= 80 &&
+    !blob.includes("projectId") &&
+    !blob.includes("stack") &&
+    publicReport.reason === "error";
+
+  return {
+    name: "codebase-activation-public-report-safe",
+    passed,
+    message: `termLen=${publicReport.searchTerms[0]?.length}`,
+  };
+}
+
 export async function runCodebaseActivatorEvals(): Promise<EvalResult[]> {
   return Promise.all([
     evalCodebaseActivationLimitCap(),
@@ -231,5 +285,8 @@ export async function runCodebaseActivatorEvals(): Promise<EvalResult[]> {
     evalCodebaseActivationInnerMemoryPreserved(),
     evalCodebaseActivationFailSoft(),
     evalCodebaseActivationNoUserInputInBlock(),
+    evalCodebaseActivationSanitizeTerms(),
+    evalCodebaseActivationTermBounds(),
+    evalPublicActivationReportSafe(),
   ]);
 }

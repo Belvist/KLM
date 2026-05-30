@@ -142,6 +142,22 @@ Runtime injects indexed codebase metadata into the reasoning loop (`contextSumma
 
 ---
 
+## Phase 2.6.1 — Activation Observability
+
+Runtime and audit expose structured codebase activation telemetry (no raw user input).
+
+| #   | Задача                                           | Статус |
+| --- | ------------------------------------------------ | ------ |
+| 1   | `CodebaseActivationReport` in `@klm/core`        | ✅     |
+| 2   | Activator sets report + sanitized `searchTerms`  | ✅     |
+| 3   | Audit event `codebase_activation` per request    | ✅     |
+| 4   | Response `klm.codebaseActivation` debug metadata | ✅     |
+| 5   | E2e: audit + response + no secret in audit terms | ✅     |
+
+**Reasons:** `disabled`, `no_terms`, `no_hits`, `error`, `activated`.
+
+---
+
 ## Phase 2.7 — следующее
 
 Impact analysis / test suggestions on top of codebase map — **not** autonomous code changes.
