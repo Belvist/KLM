@@ -39,6 +39,9 @@ export interface ModelCallRow {
   completionTokens: number;
   totalTokens: number;
   latencyMs?: number;
+  outcome: string;
+  errorCode?: string;
+  errorMessage?: string;
   createdAt: string;
 }
 
@@ -124,7 +127,8 @@ export class ObservabilityReader {
     const values: unknown[] = [params.projectId, params.limit + 1];
     let query = `
       SELECT id, request_id, project_id, provider, model, task_type,
-             prompt_tokens, completion_tokens, total_tokens, latency_ms, created_at
+             prompt_tokens, completion_tokens, total_tokens, latency_ms,
+             outcome, error_code, error_message, created_at
       FROM model_calls
       WHERE project_id = $1
     `;
@@ -146,6 +150,9 @@ export class ObservabilityReader {
       completionTokens: Number(row.completion_tokens),
       totalTokens: Number(row.total_tokens),
       latencyMs: row.latency_ms != null ? Number(row.latency_ms) : undefined,
+      outcome: String(row.outcome ?? "success"),
+      errorCode: row.error_code ? String(row.error_code) : undefined,
+      errorMessage: row.error_message ? String(row.error_message) : undefined,
       createdAt: new Date(row.created_at as string | Date).toISOString(),
     }));
     return paginateRows(mapped, params.limit, (item) => item.createdAt);

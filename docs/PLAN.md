@@ -82,6 +82,19 @@ Observability hardening gate.
 
 ---
 
+## Phase 2.3.3 — ✅ (2026-05-30)
+
+`model_calls` failure telemetry.
+
+| #   | Задача                                               | Статус |
+| --- | ---------------------------------------------------- | ------ |
+| 1   | Migration `004_model_call_outcome.sql`               | ✅     |
+| 2   | Router: `outcome=success\|error` + sanitized message | ✅     |
+| 3   | `/v1/admin/model-calls` returns outcome fields       | ✅     |
+| 4   | E2e: failed generate + stream + observability API    | ✅     |
+
+---
+
 ## Phase 2.4 — следующее
 
 Codebase indexer — files, functions, routes, imports, schemas.
@@ -100,8 +113,7 @@ Codebase indexer — files, functions, routes, imports, schemas.
 | --- | ----------------------------------------------- |
 | 17  | `organizations` / `workspaces` / `users` tables |
 | 18  | SSO / RBAC                                      |
-| 19  | Failed model_calls outcome column               |
-| 20  | IVFFlat index for embeddings at scale           |
+| 19  | IVFFlat index for embeddings at scale           |
 
 ---
 
@@ -159,3 +171,4 @@ Invoke-RestMethod -Uri "http://localhost:3100/v1/projects/00000000-0000-4000-800
 | 2026-05-29 | Phase 2.3 observability endpoints + demo/live split     |
 | 2026-05-30 | Phase 2.3.1 content redaction + includeContent controls |
 | 2026-05-30 | Phase 2.3.2 observability hardening gate                |
+| 2026-05-30 | Phase 2.3.3 model_calls outcome telemetry               |

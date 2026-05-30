@@ -178,6 +178,16 @@ async function main(): Promise<void> {
       `model_calls=${modelCallCount.rows[0]?.c ?? 0}`
     );
 
+    const modelCallOutcome = await pool.query<{ outcome: string }>(
+      `SELECT outcome FROM model_calls WHERE request_id = $1 LIMIT 1`,
+      [requestId]
+    );
+    record(
+      "model-call-outcome-success",
+      modelCallOutcome.rows[0]?.outcome === "success",
+      `outcome=${modelCallOutcome.rows[0]?.outcome ?? "missing"}`
+    );
+
     const streamCallCount = await pool.query(
       `SELECT COUNT(*)::int AS c FROM model_calls WHERE request_id = $1`,
       [streamRequestId]

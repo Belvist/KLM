@@ -11,6 +11,8 @@ import { MODEL_CLASS_MAP } from "@klm/core";
 
 import type { AuditLogger } from "@klm/audit";
 
+import { sanitizeModelCallError } from "@klm/audit";
+
 import type { ModelAdapter } from "./types.js";
 
 import { AnthropicAdapter } from "./anthropic-adapter.js";
@@ -185,10 +187,14 @@ export class ModelRouter {
         totalTokens: response.usage?.totalTokens ?? 0,
 
         latencyMs: Date.now() - started,
+
+        outcome: "success",
       });
 
       return response;
     } catch (err) {
+      const { errorCode, errorMessage } = sanitizeModelCallError(err);
+
       await this.audit?.logModelCall({
         requestId,
 
@@ -207,6 +213,12 @@ export class ModelRouter {
         totalTokens: 0,
 
         latencyMs: Date.now() - started,
+
+        outcome: "error",
+
+        errorCode,
+
+        errorMessage,
       });
 
       throw err;
@@ -270,8 +282,12 @@ export class ModelRouter {
         totalTokens: completionTokens,
 
         latencyMs: Date.now() - started,
+
+        outcome: "success",
       });
     } catch (err) {
+      const { errorCode, errorMessage } = sanitizeModelCallError(err);
+
       await this.audit?.logModelCall({
         requestId,
 
@@ -290,6 +306,12 @@ export class ModelRouter {
         totalTokens: 0,
 
         latencyMs: Date.now() - started,
+
+        outcome: "error",
+
+        errorCode,
+
+        errorMessage,
       });
 
       throw err;

@@ -22,6 +22,9 @@ export interface ModelCallEntry {
   completionTokens: number;
   totalTokens: number;
   latencyMs?: number;
+  outcome?: "success" | "error";
+  errorCode?: string;
+  errorMessage?: string;
 }
 
 export interface AuditLogger {

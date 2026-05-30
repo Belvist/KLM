@@ -38,8 +38,9 @@ export class PostgresAuditLogger implements AuditLogger {
     await this.pool.query(
       `INSERT INTO model_calls (
         id, request_id, project_id, provider, model, task_type,
-        prompt_tokens, completion_tokens, total_tokens, latency_ms
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)`,
+        prompt_tokens, completion_tokens, total_tokens, latency_ms,
+        outcome, error_code, error_message
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13)`,
       [
         randomUUID(),
         entry.requestId ?? null,
@@ -51,6 +52,9 @@ export class PostgresAuditLogger implements AuditLogger {
         entry.completionTokens,
         entry.totalTokens,
         entry.latencyMs ?? null,
+        entry.outcome ?? "success",
+        entry.errorCode ?? null,
+        entry.errorMessage ?? null,
       ]
     );
   }

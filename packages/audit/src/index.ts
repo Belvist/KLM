@@ -32,4 +32,5 @@ export type {
   PaginatedResult,
   PaginationParams,
 } from "./observability-reader.js";
-export type { ContentExposureOptions, ExposedTextContent } from "./content-exposure.js";
+export { sanitizeModelCallError } from "./model-call-error.js";
+export type { ModelCallOutcome } from "./model-call-error.js";
