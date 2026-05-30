@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CodebaseActivationReportSchema } from "./runtime.js";
 
 export const OrganizationPlanSchema = z.enum(["personal", "team", "enterprise"]);
 
@@ -119,6 +120,7 @@ export const KlmResponseSchema = z.object({
       totalTokens: z.number().int(),
     })
     .optional(),
+  codebaseActivation: CodebaseActivationReportSchema.optional(),
 });
 
 export type KlmResponse = z.infer<typeof KlmResponseSchema>;

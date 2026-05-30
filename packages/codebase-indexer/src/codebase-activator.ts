@@ -1,5 +1,10 @@
 import type { Event, ProjectState, Situation } from "@klm/core";
 import type { ActivatedMemory, MemoryActivator, MemoryType } from "@klm/memory-core";
+import {
+  buildCodebaseActivationReport,
+  MAX_ACTIVATION_SEARCH_TERMS,
+  MAX_ACTIVATION_TERM_LENGTH,
+} from "./codebase-activation-report.js";
 import type { CodebaseSearchResult } from "./query-reader.js";
 import {
   CodebaseQueryReader,
@@ -109,7 +114,7 @@ export function extractCodebaseSearchTerms(situation: Situation): string[] {
 
   const add = (raw: string): void => {
     const term = raw.trim();
-    if (!term || term.length > 120) {
+    if (!term || term.length > MAX_ACTIVATION_TERM_LENGTH) {
       return;
     }
     const key = term.toLowerCase();
@@ -135,7 +140,7 @@ export function extractCodebaseSearchTerms(situation: Situation): string[] {
     }
   }
 
-  return terms.slice(0, 8);
+  return terms.slice(0, MAX_ACTIVATION_SEARCH_TERMS);
 }
 
 /** Primary search term for logging / legacy callers. */
@@ -251,7 +256,10 @@ export class CodebaseMemoryActivator implements MemoryActivator {
 
     const terms = extractCodebaseSearchTerms(situation);
     if (!terms.length) {
-      return base;
+      return {
+        ...base,
+        codebaseActivation: buildCodebaseActivationReport({ reason: "no_terms" }),
+      };
     }
 
     try {
@@ -276,15 +284,34 @@ export class CodebaseMemoryActivator implements MemoryActivator {
       const trimmed = trimActivationSearchResult(search, this.perKindLimit);
       const block = formatCodebaseActivationBlock(trimmed);
       if (!block) {
-        return base;
+        return {
+          ...base,
+          codebaseActivation: buildCodebaseActivationReport({
+            reason: "no_hits",
+            searchTerms: terms,
+            result: trimmed,
+          }),
+        };
       }
 
       return {
         ...base,
         contextSummary: [base.contextSummary, block].filter(Boolean).join("\n\n"),
+        codebaseActivation: buildCodebaseActivationReport({
+          reason: "activated",
+          searchTerms: terms,
+          result: trimmed,
+          blockInjected: true,
+        }),
       };
     } catch {
-      return base;
+      return {
+        ...base,
+        codebaseActivation: buildCodebaseActivationReport({
+          reason: "error",
+          searchTerms: terms,
+        }),
+      };
     }
   }
 }

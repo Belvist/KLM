@@ -112,3 +112,68 @@ export const CompiledOutputSchema = z.object({
 });
 
 export type CompiledOutput = z.infer<typeof CompiledOutputSchema>;
+
+export const CodebaseActivationReasonSchema = z.enum([
+  "disabled",
+  "no_terms",
+  "no_hits",
+  "error",
+  "activated",
+]);
+
+export type CodebaseActivationReason = z.infer<typeof CodebaseActivationReasonSchema>;
+
+export const CodebaseActivationCountsSchema = z.object({
+  files: z.number().int().nonnegative(),
+  routes: z.number().int().nonnegative(),
+  symbols: z.number().int().nonnegative(),
+  dependencies: z.number().int().nonnegative(),
+});
+
+export const CodebaseActivationReportSchema = z.object({
+  activationUsed: z.boolean(),
+  reason: CodebaseActivationReasonSchema,
+  searchTerms: z.array(z.string()),
+  counts: CodebaseActivationCountsSchema,
+});
+
+export type CodebaseActivationReport = z.infer<typeof CodebaseActivationReportSchema>;
+
+export function emptyCodebaseActivationCounts(): CodebaseActivationReport["counts"] {
+  return { files: 0, routes: 0, symbols: 0, dependencies: 0 };
+}
+
+/** When CodebaseMemoryActivator is not wired (env off or no DATABASE_URL). */
+export function disabledCodebaseActivationReport(): CodebaseActivationReport {
+  return {
+    activationUsed: false,
+    reason: "disabled",
+    searchTerms: [],
+    counts: emptyCodebaseActivationCounts(),
+  };
+}
+
+export const MAX_PUBLIC_ACTIVATION_SEARCH_TERMS = 10;
+export const MAX_PUBLIC_ACTIVATION_TERM_LENGTH = 80;
+
+/** API/audit-safe view — bounded terms, no extra fields. */
+export function publicCodebaseActivationReport(
+  report: CodebaseActivationReport
+): CodebaseActivationReport {
+  const searchTerms = report.searchTerms
+    .map((t) => t.trim().slice(0, MAX_PUBLIC_ACTIVATION_TERM_LENGTH))
+    .filter((t) => t.length > 0)
+    .slice(0, MAX_PUBLIC_ACTIVATION_SEARCH_TERMS);
+
+  return {
+    activationUsed: report.activationUsed,
+    reason: report.reason,
+    searchTerms,
+    counts: {
+      files: report.counts.files,
+      routes: report.counts.routes,
+      symbols: report.counts.symbols,
+      dependencies: report.counts.dependencies,
+    },
+  };
+}

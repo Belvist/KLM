@@ -68,6 +68,13 @@ export {
   type SearchKind,
 } from "./search-kind.js";
 export {
+  buildCodebaseActivationReport,
+  countsFromSearchResult,
+  MAX_ACTIVATION_SEARCH_TERMS,
+  MAX_ACTIVATION_TERM_LENGTH,
+  sanitizeActivationSearchTerms,
+} from "./codebase-activation-report.js";
+export {
   CodebaseMemoryActivator,
   buildCodebaseSearchQuery,
   countActivationBlockItems,

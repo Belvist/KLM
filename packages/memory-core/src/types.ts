@@ -1,4 +1,5 @@
 import type {
+  CodebaseActivationReport,
   DecisionNode,
   Event,
   Invariant,
@@ -28,6 +29,8 @@ export interface ActivatedMemory {
   recentEvents: Event[];
   principles: string[];
   contextSummary: string;
+  /** Set by CodebaseMemoryActivator when codebase memory runs. */
+  codebaseActivation?: CodebaseActivationReport;
 }
 
 export interface MemoryActivator {
