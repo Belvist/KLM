@@ -95,15 +95,24 @@ Observability hardening gate.
 
 ---
 
-## Phase 2.4 — следующее
+## Phase 2.4 — ✅ Codebase Indexer (2026-05-30)
 
-Codebase indexer — files, functions, routes, imports, schemas.
+Structured codebase map + optional semantic chunks (`code_file`, `code_symbol`, `code_route`).
 
-| #   | Задача                                  |
-| --- | --------------------------------------- |
-| 1   | File/function/class index               |
-| 2   | Route and dependency graph              |
-| 3   | Semantic chunks from codebase structure |
+| #   | Задача                                                         | Статус |
+| --- | -------------------------------------------------------------- | ------ |
+| 1   | Migration `005_codebase_index.sql`                             | ✅     |
+| 2   | `@klm/codebase-indexer` — scanner, parser, indexer, semantic   | ✅     |
+| 3   | `pnpm index:codebase -- --root . --project-id <uuid>`          | ✅     |
+| 4   | Eval: files, ignores, imports, exports, routes, idempotent run | ✅     |
+
+**P0 invariants:** read-only index, ignore `node_modules/dist/build/.git/.klm-data`, idempotent upsert, one `sourceId` → one chunk, `projectId` required, no OpenAI for structured index, semantic optional.
+
+---
+
+## Phase 2.5 — следующее
+
+Agent tooling on top of codebase map (impact analysis, test suggestions) — **not** autonomous code changes yet.
 
 ---
 
@@ -126,6 +135,8 @@ pnpm db:seed
 pnpm build
 pnpm eval                  # unit (in-memory)
 pnpm eval:integration      # PostgreSQL components
+pnpm eval:codebase-index   # codebase indexer (set KLM_SEMANTIC_MEMORY=true for chunks)
+pnpm index:codebase -- --root . --project-id 00000000-0000-4000-8000-000000000003
 pnpm eval:e2e              # full runtime path + observability
 pnpm record:demo           # mock → demo project
 pnpm record:live           # OpenRouter → live project
