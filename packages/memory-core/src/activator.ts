@@ -1,6 +1,12 @@
 import type { Event, ProjectState, Situation } from "@klm/core";
 import type { ActivatedMemory, MemoryActivator, MemoryType } from "./types.js";
 
+function eventSnippetLimit(): number {
+  const raw = process.env.KLM_MEMORY_EVENT_SNIPPET_CHARS;
+  const n = raw ? Number.parseInt(raw, 10) : 800;
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 4000) : 800;
+}
+
 export class RuleBasedMemoryActivator implements MemoryActivator {
   async activate(
     situation: Situation,
@@ -28,11 +34,12 @@ export class RuleBasedMemoryActivator implements MemoryActivator {
     }
 
     if (recentEvents.length) {
+      const snippetLimit = eventSnippetLimit();
       contextParts.push(
         "Recent events:\n" +
           recentEvents
             .slice(-8)
-            .map((e) => `- [${e.type}] ${e.content.slice(0, 200)}`)
+            .map((e) => `- [${e.type}] ${e.content.slice(0, snippetLimit)}`)
             .join("\n")
       );
     }

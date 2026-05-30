@@ -13,5 +13,12 @@ export function decisionAlreadyExists(projectState: ProjectState, decisionText: 
 
 export function invariantAlreadyExists(projectState: ProjectState, ruleText: string): boolean {
   const normalized = normalizeMemoryText(ruleText);
+  const idMatch = ruleText.match(/^\[(INV-[A-Z0-9-]+)\]/i);
+  if (idMatch) {
+    const needle = `[${idMatch[1]!.toUpperCase()}]`.toLowerCase();
+    if (projectState.invariants.some((i) => i.rule.toLowerCase().startsWith(needle))) {
+      return true;
+    }
+  }
   return projectState.invariants.some((i) => normalizeMemoryText(i.rule) === normalized);
 }

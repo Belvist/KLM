@@ -15,6 +15,7 @@ const DEMO_WORKSPACE = process.env.KLM_DEMO_WORKSPACE_ID ?? "00000000-0000-4000-
 const DEMO_PROJECT = process.env.KLM_DEMO_PROJECT_ID ?? "00000000-0000-4000-8000-000000000003";
 const DEMO_USER = process.env.KLM_DEMO_USER_ID ?? "00000000-0000-4000-8000-000000000004";
 const LIVE_PROJECT = process.env.KLM_LIVE_PROJECT_ID ?? "00000000-0000-4000-8000-000000000005";
+const MUSIC_PROJECT = process.env.KLM_MUSIC_PROJECT_ID ?? "00000000-0000-4000-8000-000000000105";
 
 function makeInvariant(
   projectId: string,
@@ -243,6 +244,46 @@ function buildProjectState(
   };
 }
 
+/** External repos (music-platform) — empty structured memory; fill via klm:import-docs. */
+function buildExternalProjectState(
+  projectId: string,
+  workspaceId: string,
+  name: string,
+  rootPath: string,
+  description: string
+) {
+  return {
+    id: projectId,
+    workspaceId,
+    name,
+    description,
+    goals: ["Persistent project memory via KLM — decisions and invariants from repo docs"],
+    businessModel: [],
+    architecture: {
+      summary: "Cursor/MCP → KLM Runtime → PostgreSQL project memory + codebase index",
+      components: [],
+      dataFlows: [],
+    },
+    techStack: {
+      languages: [],
+      frameworks: [],
+      databases: ["PostgreSQL"],
+      infra: [],
+      tools: ["KLM Runtime"],
+    },
+    invariants: [],
+    decisions: [],
+    risks: [],
+    roadmap: [],
+    codebaseMap: {
+      rootPath,
+      fileCount: 0,
+      modules: [],
+    },
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 const demoState = buildProjectState(
   DEMO_PROJECT,
   DEMO_WORKSPACE,
@@ -254,7 +295,15 @@ const liveState = buildProjectState(
   LIVE_PROJECT,
   DEMO_WORKSPACE,
   "KLM Runtime Live",
-  "Real MCP/Cursor project — record:live and IDE sessions write here."
+  "KLM Runtime MCP/API sessions — not external repos."
+);
+
+const musicState = buildExternalProjectState(
+  MUSIC_PROJECT,
+  DEMO_WORKSPACE,
+  "music-platform",
+  process.env.KLM_MUSIC_PLATFORM_ROOT ?? "C:\\Users\\Heave\\Downloads\\music-platform",
+  "Earflow music-platform — structured memory from docs/DECISIONS.md + ARCHITECTURE_INVARIANTS.md"
 );
 
 const pool = new pg.Pool({ connectionString });
@@ -277,11 +326,14 @@ async function seedProject(
 try {
   await seedProject(DEMO_PROJECT, DEMO_WORKSPACE, demoState);
   await seedProject(LIVE_PROJECT, DEMO_WORKSPACE, liveState);
+  await seedProject(MUSIC_PROJECT, DEMO_WORKSPACE, musicState);
 
   console.log("\nDemo project (e2e, record:demo):");
   console.log(`  X-KLM-Project-Id: ${DEMO_PROJECT}`);
-  console.log("\nLive project (MCP, record:live):");
+  console.log("\nKLM Runtime live (record:live, klm-runtime MCP when developing KLM itself):");
   console.log(`  X-KLM-Project-Id: ${LIVE_PROJECT}`);
+  console.log("\nMusic-platform / external repo (Earflow — isolated from KLM seed):");
+  console.log(`  X-KLM-Project-Id: ${MUSIC_PROJECT}`);
   console.log("\nShared tenant headers:");
   console.log(`  X-KLM-Organization-Id: ${DEMO_ORG}`);
   console.log(`  X-KLM-Workspace-Id: ${DEMO_WORKSPACE}`);

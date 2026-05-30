@@ -163,7 +163,9 @@ export type UserState = z.infer<typeof UserStateSchema>;
 
 export const MemoryUpdateSchema = z.object({
   newDecision: DecisionNodeSchema.optional(),
+  newDecisions: z.array(DecisionNodeSchema).optional(),
   newInvariant: InvariantSchema.optional(),
+  newInvariants: z.array(InvariantSchema).optional(),
   updatedRisk: RiskNodeSchema.optional(),
   userPreference: UserPreferenceSchema.partial().optional(),
   projectStatePatch: z.record(z.unknown()).optional(),

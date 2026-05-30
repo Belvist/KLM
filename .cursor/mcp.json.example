@@ -4,6 +4,8 @@
       "command": "pnpm",
       "args": ["--dir", "../klm-runtime/apps/mcp-server", "dev"],
       "env": {
+        "DATABASE_URL": "postgresql://klm:klm@localhost:5432/klm",
+        "KLM_CODEBASE_ACTIVATION": "true",
         "OPENROUTER_API_KEY": "${OPENROUTER_API_KEY}",
         "KLM_ORGANIZATION_ID": "00000000-0000-4000-8000-000000000001",
         "KLM_WORKSPACE_ID": "00000000-0000-4000-8000-000000000002",

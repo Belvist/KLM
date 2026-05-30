@@ -8,12 +8,11 @@ import type {
   UserState,
 } from "@klm/core";
 import {
-  DecisionNodeSchema,
   EventSchema,
-  InvariantSchema,
   ProjectStateSchema,
   UserStateSchema,
 } from "@klm/core";
+import { mergeMemoryUpdate } from "./merge-memory-update.js";
 
 export interface StateStore {
   getProjectState(projectId: string): Promise<ProjectState | null>;
@@ -99,36 +98,7 @@ export class InMemoryStateStore implements StateStore {
       state = emptyProjectState(projectId, randomUUID(), "Untitled Project");
     }
 
-    if (update.newDecision) {
-      const parsed = DecisionNodeSchema.parse(update.newDecision);
-      const exists = state.decisions.some(
-        (d) =>
-          d.status === "active" &&
-          d.decision.toLowerCase().trim() === parsed.decision.toLowerCase().trim()
-      );
-      if (!exists) {
-        state.decisions = [...state.decisions, parsed];
-      }
-    }
-
-    if (update.newInvariant) {
-      const parsed = InvariantSchema.parse(update.newInvariant);
-      const exists = state.invariants.some(
-        (i) => i.rule.toLowerCase().trim() === parsed.rule.toLowerCase().trim()
-      );
-      if (!exists) {
-        state.invariants = [...state.invariants, parsed];
-      }
-    }
-
-    if (update.updatedRisk) {
-      const idx = state.risks.findIndex((r) => r.id === update.updatedRisk!.id);
-      if (idx >= 0) {
-        state.risks[idx] = update.updatedRisk;
-      } else {
-        state.risks.push(update.updatedRisk);
-      }
-    }
+    state = mergeMemoryUpdate(state, update);
 
     if (update.newEvents?.length) {
       for (const event of update.newEvents) {

@@ -20,6 +20,7 @@
     "@klm/bootstrap": "workspace:*",
     "@klm/codebase-indexer": "workspace:*",
     "@klm/core": "workspace:*",
+    "dotenv": "^17.4.2",
     "fastify": "^5.2.1"
   },
   "devDependencies": {

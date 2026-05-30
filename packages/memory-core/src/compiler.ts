@@ -5,10 +5,12 @@ import type { MemoryCompiler, MemoryUpdater } from "./types.js";
 
 const MEMORY_EXTRACTION_PROMPT = `Analyze the interaction and extract structured memory updates.
 Return JSON with optional fields:
-- decision: { decision, reason[], rejectedAlternatives[], consequencesExpected[] }
-- invariant: { rule, reason, severity: "soft"|"hard"|"critical", appliesTo[] }
-- risk: { title, description, severity, linkedModules[] }
-Only extract if there is a clear architectural or project decision. Return {} if nothing durable.`;
+- decisions: [{ decision, reason[], rejectedAlternatives[], consequencesExpected[], linkedFiles[], linkedModules[] }]
+- invariants: [{ rule, reason, severity: "soft"|"hard"|"critical", appliesTo[] }]
+- episodes: string[]
+Extract ALL durable architectural decisions and invariants found (up to 10 each).
+Prefix invariant rules with [INV-XXX] when an ID is known from the transcript.
+Return { "decisions": [], "invariants": [] } if nothing durable.`;
 
 export class LlmMemoryCompiler implements MemoryCompiler {
   constructor(private router: ModelRouter) {}
@@ -43,11 +45,15 @@ export class LlmMemoryCompiler implements MemoryCompiler {
         episodes?: string[];
         decisions?: Array<Partial<import("@klm/core").DecisionNode>>;
         invariants?: Array<Partial<import("@klm/core").Invariant>>;
+        decision?: Partial<import("@klm/core").DecisionNode>;
+        invariant?: Partial<import("@klm/core").Invariant>;
       };
+      const decisions = parsed.decisions ?? (parsed.decision ? [parsed.decision] : []);
+      const invariants = parsed.invariants ?? (parsed.invariant ? [parsed.invariant] : []);
       return {
         episodes: parsed.episodes ?? [],
-        decisions: parsed.decisions ?? [],
-        invariants: parsed.invariants ?? [],
+        decisions,
+        invariants,
       };
     } catch {
       return { episodes: [transcript.slice(0, 500)], decisions: [], invariants: [] };
