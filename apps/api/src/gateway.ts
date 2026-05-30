@@ -6,6 +6,7 @@ import type { ClientType, ConversationMessage, KlmRequest } from "@klm/core";
 import { buildConversationContext, lastUserMessage } from "@klm/core";
 import { assertProjectAccess } from "./lib/tenant-access.js";
 import { registerObservabilityRoutes } from "./routes/observability.js";
+import { registerCodebaseRoutes } from "./routes/codebase.js";
 
 const API_KEY = process.env.KLM_API_KEY ?? "klm_dev_key_change_me";
 
@@ -168,6 +169,7 @@ export async function buildGateway(options: BuildGatewayOptions = {}) {
   const connectionString = process.env.DATABASE_URL;
   if (connectionString) {
     registerObservabilityRoutes(app, connectionString);
+    registerCodebaseRoutes(app, connectionString);
   }
 
   return { app, store, runtime, klm };

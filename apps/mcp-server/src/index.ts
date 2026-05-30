@@ -4,6 +4,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { createKlmApp, getKlmEnvironment } from "@klm/bootstrap";
+import { CodebaseQueryReader, handleCodebaseSearch } from "@klm/codebase-indexer";
 
 const PROJECT_ID = process.env.KLM_PROJECT_ID ?? "";
 const WORKSPACE_ID = process.env.KLM_WORKSPACE_ID ?? "";
@@ -22,6 +23,9 @@ if (!PROJECT_ID || !WORKSPACE_ID || !USER_ID) {
 }
 
 const { store, runtime } = await createKlmApp();
+
+const DATABASE_URL = process.env.DATABASE_URL;
+const codebaseReader = DATABASE_URL ? new CodebaseQueryReader(DATABASE_URL) : null;
 
 const server = new McpServer({
   name: "klm-runtime",
@@ -120,6 +124,30 @@ server.tool(
 );
 
 server.tool(
+  "klm_search_codebase",
+  "Search indexed codebase: files, routes, symbols, dependencies (requires DATABASE_URL + prior index:codebase)",
+  {
+    query: z.string().describe("Search term (path fragment, route, symbol name, import module)"),
+    kind: z
+      .enum(["all", "files", "routes", "symbols", "dependencies"])
+      .optional()
+      .describe("Limit search to one category (default: all)"),
+    limit: z.number().int().min(1).max(100).optional().describe("Max results per category"),
+  },
+  async ({ query, kind, limit }) => {
+    const result = await handleCodebaseSearch(codebaseReader, tenant().projectId, {
+      query,
+      kind,
+      limit,
+    });
+
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+server.tool(
   "klm_verify_code",
   "Verify code or architecture against project invariants",
   { content: z.string().describe("Code or architecture to verify") },
@@ -169,6 +197,11 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("KLM MCP Server running (shared store with API via KLM_STATE_PATH / DATABASE_URL)");
+
+  process.on("SIGINT", async () => {
+    await codebaseReader?.close();
+    process.exit(0);
+  });
 }
 
 main().catch((err) => {

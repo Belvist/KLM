@@ -26,6 +26,9 @@ importers:
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap
+      '@klm/codebase-indexer':
+        specifier: workspace:*
+        version: link:../../packages/codebase-indexer
       '@klm/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -45,6 +48,9 @@ importers:
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap
+      '@klm/codebase-indexer':
+        specifier: workspace:*
+        version: link:../../packages/codebase-indexer
       '@modelcontextprotocol/sdk':
         specifier: ^1.12.1
         version: 1.29.0(zod@3.25.76)
