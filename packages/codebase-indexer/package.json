@@ -17,6 +17,8 @@
     "index": "node --import tsx src/cli.ts"
   },
   "dependencies": {
+    "@klm/core": "workspace:*",
+    "@klm/memory-core": "workspace:*",
     "@klm/semantic-memory": "workspace:*",
     "pg": "^8.14.1",
     "typescript": "^5.8.2"

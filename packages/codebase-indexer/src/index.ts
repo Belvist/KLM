@@ -67,3 +67,15 @@ export {
   InvalidSearchKindError,
   type SearchKind,
 } from "./search-kind.js";
+export {
+  CodebaseMemoryActivator,
+  buildCodebaseSearchQuery,
+  countActivationBlockItems,
+  extractCodebaseSearchTerms,
+  formatCodebaseActivationBlock,
+  isCodebaseActivationEnabled,
+  resolveCodebaseActivationLimit,
+  trimActivationSearchResult,
+  MAX_ACTIVATION_BLOCK_ITEMS,
+  DEFAULT_ACTIVATION_LIMIT,
+} from "./codebase-activator.js";
