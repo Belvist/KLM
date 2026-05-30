@@ -1,6 +1,10 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, readFileSync } from "node:fs";
+import {
+  ProjectNotInitializedError,
+  resolveProjectIdForRoot,
+} from "@klm/project-resolver";
 import { CodebaseIndexer } from "./indexer.js";
 
 function loadRootEnv(): void {
@@ -21,9 +25,9 @@ function loadRootEnv(): void {
   }
 }
 
-function parseArgs(argv: string[]): { root: string; projectId: string } {
+function parseArgs(argv: string[]): { root: string; projectId?: string } {
   let root = ".";
-  let projectId = "";
+  let projectId: string | undefined;
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -37,17 +41,11 @@ function parseArgs(argv: string[]): { root: string; projectId: string } {
     }
   }
 
-  if (!projectId) {
-    console.error("Error: --project-id is required");
-    printHelp();
-    process.exit(1);
-  }
-
   return { root: resolve(root), projectId };
 }
 
 function printHelp(): void {
-  console.log(`Usage: pnpm index:codebase -- --root <path> --project-id <uuid>
+  console.log(`Usage: pnpm index:codebase -- --root <path> [--project-id <uuid>]
 
 Indexes TypeScript/JavaScript source files into PostgreSQL structured tables
 (code_files, code_symbols, code_dependencies, code_routes) and optionally
@@ -55,7 +53,7 @@ memory_chunks when KLM_SEMANTIC_MEMORY=true.
 
 Options:
   --root         Repository root (default: .)
-  --project-id   Target project UUID (required)
+  --project-id   Target project UUID (optional if .klm/project.json exists)
 `);
 }
 
@@ -69,13 +67,26 @@ async function main(): Promise<void> {
   }
 
   const { root, projectId } = parseArgs(process.argv.slice(2));
+
+  let resolvedProjectId: string;
+  try {
+    resolvedProjectId = await resolveProjectIdForRoot(root, projectId);
+  } catch (err) {
+    if (err instanceof ProjectNotInitializedError) {
+      console.error(`Error: ${err.code} — ${err.message}`);
+      printHelp();
+      process.exit(1);
+    }
+    throw err;
+  }
+
   const indexer = new CodebaseIndexer(connectionString);
 
   try {
-    console.log(`Indexing codebase at ${root} for project ${projectId}...`);
+    console.log(`Indexing codebase at ${root} for project ${resolvedProjectId}...`);
     const result = await indexer.indexProject({
       root,
-      projectId,
+      projectId: resolvedProjectId,
       connectionString,
     });
 
