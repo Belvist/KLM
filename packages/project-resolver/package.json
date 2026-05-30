@@ -1,5 +1,5 @@
 {
-  "name": "@klm/bootstrap",
+  "name": "@klm/project-resolver",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -16,15 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@klm/project-resolver": "workspace:*",
-    "@klm/audit": "workspace:*",
-    "@klm/codebase-indexer": "workspace:*",
     "@klm/core": "workspace:*",
-    "@klm/memory-core": "workspace:*",
-    "@klm/model-adapters": "workspace:*",
-    "@klm/runtime": "workspace:*",
-    "@klm/semantic-memory": "workspace:*",
-    "@klm/state-store": "workspace:*",
     "pg": "^8.14.1"
   },
   "devDependencies": {

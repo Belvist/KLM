@@ -16,6 +16,16 @@ import { createStateStore, resetSharedStoreForTests, type StateStore } from "@kl
 
 export { extractTenant, getKlmEnvironment, TenantValidationError } from "./tenant.js";
 export type { KlmEnvironment } from "./tenant.js";
+export {
+  projectIdFromPath,
+  readManifest,
+  writeManifest,
+  resolveProjectContext,
+  pinProjectId,
+  newRequestId,
+  manifestPath,
+} from "./project-context.js";
+export type { KlmProjectManifest, ResolvedProjectContext, ResolveProjectOptions } from "./project-context.js";
 
 export interface KlmApp {
   store: StateStore;
