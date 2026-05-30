@@ -158,6 +158,30 @@ Runtime and audit expose structured codebase activation telemetry (no raw user i
 
 ---
 
+## Phase 2.6.3 — Automatic Project Resolution (2026-05-31)
+
+**Scope:** automatic resolution for **CLI + MCP**. **HTTP API remains header-only** until API middleware lands.
+
+| #   | Задача                                              | Статус |
+| --- | --------------------------------------------------- | ------ |
+| 1   | `@klm/project-resolver` (fingerprint + manifest)    | ✅     |
+| 2   | Postgres `projects` table (`007_projects.sql`)      | ✅     |
+| 3   | `pnpm klm:init` / `pnpm klm:project`                | ✅     |
+| 4   | index/import without `--project-id` when manifest   | ✅     |
+| 5   | MCP: `KLM_WORKSPACE_ROOT`, strict cwd, no silent init | ✅  |
+| 6   | Fingerprint mismatch / identity conflict → fail     | ✅     |
+| 7   | Unit + e2e resolver evals                           | ✅     |
+
+See [PROJECTS.md](./PROJECTS.md).
+
+**P0:** fail closed on identity doubt — `PROJECT_FINGERPRINT_MISMATCH`, `PROJECT_IDENTITY_CONFLICT`. Only `klm:init` creates identity.
+
+**Not in 2.6.3:** API manifest resolution (still `X-KLM-Project-Id`).
+
+**Acceptance:** pending final P0 verification before commit/push.
+
+---
+
 ## Phase 2.7 — следующее
 
 Impact analysis / test suggestions on top of codebase map — **not** autonomous code changes.
@@ -184,7 +208,9 @@ pnpm build
 pnpm eval                  # unit (in-memory)
 pnpm eval:integration      # PostgreSQL components
 pnpm eval:codebase-index   # codebase indexer (set KLM_SEMANTIC_MEMORY=true for chunks)
-pnpm index:codebase -- --root . --project-id 00000000-0000-4000-8000-000000000003
+pnpm index:codebase -- --root .
+pnpm klm:init -- --root .
+pnpm klm:project -- --root .
 pnpm eval:e2e              # full runtime path + observability
 pnpm record:demo           # mock → demo project
 pnpm record:live           # OpenRouter → live project
@@ -201,6 +227,16 @@ pnpm dev:api   # перезапусти, если был старый проце
 pnpm smoke:observability
 # live project:
 pnpm smoke:observability -ProjectId 00000000-0000-4000-8000-000000000005
+```
+
+### Real project (music-platform)
+
+See [REAL_PROJECT_TESTING.md](./REAL_PROJECT_TESTING.md).
+
+```powershell
+pnpm index:music      # after code changes
+pnpm dev:api          # reads .env automatically
+pnpm smoke:music      # activation smoke on live project ...000005
 ```
 
 Или вручную (`Invoke-RestMethod`, не bash `curl -H`):
@@ -231,3 +267,5 @@ Invoke-RestMethod -Uri "http://localhost:3100/v1/projects/00000000-0000-4000-800
 | 2026-05-30 | Phase 2.3.1 content redaction + includeContent controls |
 | 2026-05-30 | Phase 2.3.2 observability hardening gate                |
 | 2026-05-30 | Phase 2.3.3 model_calls outcome telemetry               |
+| 2026-05-30 | Phase 2.6.2 project profile isolation (music ...105)  |
+| 2026-05-31 | Phase 2.6.3 automatic project resolution              |
