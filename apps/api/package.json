@@ -16,6 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@klm/audit": "workspace:*",
     "@klm/bootstrap": "workspace:*",
     "@klm/core": "workspace:*",
     "fastify": "^5.2.1"

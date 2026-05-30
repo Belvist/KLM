@@ -15,7 +15,11 @@
     "eval:integration": "pnpm --filter @klm/evaluation eval:integration",
     "eval:e2e": "pnpm --filter @klm/evaluation eval:e2e",
     "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+    "docker:down": "docker compose down",
+    "setup:local": "pnpm install && pnpm build && pnpm docker:up && pnpm db:migrate && pnpm db:seed",
+    "record:demo": "pnpm --filter @klm/evaluation record:demo",
+    "record:live": "pnpm --filter @klm/evaluation record:live",
+    "smoke:observability": "powershell -ExecutionPolicy Bypass -File scripts/smoke-observability.ps1"
   },
   "engines": {
     "node": ">=20"

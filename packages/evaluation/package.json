@@ -8,7 +8,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "eval": "node --import tsx src/run.ts",
     "eval:integration": "node --import tsx src/integration/run.ts",
-    "eval:e2e": "node --import tsx src/e2e/run.ts"
+    "eval:e2e": "node --import tsx src/e2e/run.ts",
+    "record:demo": "node --import tsx src/record-demo.ts",
+    "record:live": "node --import tsx src/record-live.ts"
   },
   "dependencies": {
     "@klm/api": "workspace:*",

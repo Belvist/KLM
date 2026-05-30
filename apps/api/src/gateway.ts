@@ -4,24 +4,14 @@ import type { KlmApp } from "@klm/bootstrap";
 import { createKlmApp, extractTenant, TenantValidationError } from "@klm/bootstrap";
 import type { ClientType, ConversationMessage, KlmRequest } from "@klm/core";
 import { buildConversationContext, lastUserMessage } from "@klm/core";
+import { assertProjectAccess } from "./lib/tenant-access.js";
+import { registerObservabilityRoutes } from "./routes/observability.js";
 
 const API_KEY = process.env.KLM_API_KEY ?? "klm_dev_key_change_me";
 
 function authenticate(authHeader?: string): boolean {
   if (!authHeader?.startsWith("Bearer ")) return false;
   return authHeader.slice(7) === API_KEY;
-}
-
-function assertProjectAccess(
-  tenantProjectId: string,
-  urlProjectId: string,
-  reply: import("fastify").FastifyReply
-): boolean {
-  if (tenantProjectId !== urlProjectId) {
-    reply.code(403).send({ error: "Forbidden: project does not match tenant context" });
-    return false;
-  }
-  return true;
 }
 
 export interface BuildGatewayOptions {
@@ -174,6 +164,11 @@ export async function buildGateway(options: BuildGatewayOptions = {}) {
     if (!assertProjectAccess(tenant.projectId, projectId, reply)) return;
     return store.getInvariants(projectId);
   });
+
+  const connectionString = process.env.DATABASE_URL;
+  if (connectionString) {
+    registerObservabilityRoutes(app, connectionString);
+  }
 
   return { app, store, runtime, klm };
 }

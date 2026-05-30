@@ -66,7 +66,7 @@ export async function runMcpSharedStoreE2e(
     record(
       results,
       "mcp-reads-project-state",
-      Boolean(state?.name === "KLM Runtime"),
+      Boolean(state?.name === "KLM Runtime Demo" || state?.name === "KLM Runtime"),
       `state.name=${state?.name ?? "missing"}`
     );
 

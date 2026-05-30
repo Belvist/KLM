@@ -11,6 +11,13 @@ export const DEMO_IDS = {
   user: process.env.KLM_DEMO_USER_ID ?? "00000000-0000-4000-8000-000000000004",
 };
 
+export const LIVE_IDS = {
+  org: process.env.KLM_DEMO_ORG_ID ?? "00000000-0000-4000-8000-000000000001",
+  workspace: process.env.KLM_DEMO_WORKSPACE_ID ?? "00000000-0000-4000-8000-000000000002",
+  project: process.env.KLM_LIVE_PROJECT_ID ?? "00000000-0000-4000-8000-000000000005",
+  user: process.env.KLM_DEMO_USER_ID ?? "00000000-0000-4000-8000-000000000004",
+};
+
 export const API_KEY = process.env.KLM_API_KEY ?? "klm_dev_key_change_me";
 
 export function record(
@@ -23,11 +30,18 @@ export function record(
 }
 
 export function tenantHeaders(requestId?: string): Record<string, string> {
+  return tenantHeadersForProject(DEMO_IDS.project, requestId);
+}
+
+export function tenantHeadersForProject(
+  projectId: string,
+  requestId?: string
+): Record<string, string> {
   return {
     authorization: `Bearer ${API_KEY}`,
     "x-klm-organization-id": DEMO_IDS.org,
     "x-klm-workspace-id": DEMO_IDS.workspace,
-    "x-klm-project-id": DEMO_IDS.project,
+    "x-klm-project-id": projectId,
     "x-klm-user-id": DEMO_IDS.user,
     ...(requestId ? { "x-klm-request-id": requestId } : {}),
   };

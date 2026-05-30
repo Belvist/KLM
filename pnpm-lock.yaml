@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@klm/audit':
+        specifier: workspace:*
+        version: link:../../packages/audit
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap

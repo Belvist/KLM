@@ -1,0 +1,53 @@
+---
+description: KLM MCP — автоматически читать и записывать память проекта в Agent-режиме
+alwaysApply: true
+---
+
+# KLM Auto Memory (Cursor + MCP)
+
+Проект **KLM Runtime** подключён через MCP `klm-runtime`.  
+В **Agent mode** ты обязан использовать KLM как единственный источник project memory — не полагайся только на контекст чата.
+
+## В начале задачи (READ — автоматически)
+
+Перед любым анализом, планом, рефакторингом или изменением кода:
+
+1. Вызови **`klm_get_project_memory`** (или resources `project://state`, `project://invariants`, `project://decisions`).
+2. Учитывай **invariants** и **active decisions** в каждом ответе и diff.
+3. Если память недоступна (MCP error) — сообщи пользователю: проверить Docker Postgres и Reload MCP.
+
+Не спрашивай «использовать KLM?» — **используй всегда**, если MCP доступен.
+
+## Перед изменениями кода (VERIFY)
+
+Перед предложением patch / PR / архитектурного решения:
+
+- Вызови **`klm_verify_code`** для ключевых фрагментов (auth, endpoints, tenancy, memory, audit).
+- Явно укажи, если предложение **нарушает invariant**.
+
+## После значимой работы (WRITE — автоматически)
+
+После завершения задачи, если было что-то durable (решение, plan, review, architecture note):
+
+1. Вызови **`klm_analyze_task`** с кратким summary:
+   - что решили / что сделали
+   - какие invariants учли
+   - что осталось на потом
+2. Формулировка: «Record to project memory: …»
+
+Записывай **только durable** знания — не каждое мелкое сообщение.
+
+## Режим безопасности (по умолчанию)
+
+- **Advisory first:** plan / review / analyze без изменения файлов, пока пользователь явно не попросил код.
+- Не делай irreversible architecture decisions без упоминания invariants.
+- Не пушь и не мигрируй prod без явного запроса.
+
+## Project context (fixed UUIDs)
+
+- Project: `00000000-0000-4000-8000-000000000003` (KLM Runtime seed)
+- Shared store: PostgreSQL `DATABASE_URL` (API + MCP)
+
+## Если пользователь в Ask mode
+
+MCP tools могут быть недоступны. Предложи переключиться на **Agent** для auto memory.

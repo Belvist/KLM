@@ -16,3 +16,17 @@ export function createAuditLogger(connectionString?: string): AuditLogger {
   }
   return new CompositeAuditLogger(loggers);
 }
+
+export {
+  ObservabilityReader,
+  parseLimit,
+  redactPayload,
+} from "./observability-reader.js";
+export type {
+  EventRow,
+  ModelCallRow,
+  AuditLogRow,
+  MemoryChunkRow,
+  PaginatedResult,
+  PaginationParams,
+} from "./observability-reader.js";

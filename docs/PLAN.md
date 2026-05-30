@@ -26,29 +26,46 @@ Runtime e2e correctness — product testing gate.
 | 2 | Stream → memory update after done eval | ✅ |
 | 3 | MCP shared-store eval (separate PG connection) | ✅ |
 | 4 | Realistic KLM Runtime seed (8+ invariants) | ✅ |
-| 5 | `model_calls` dashboard endpoint | ⏳ Phase 2.3 |
-
-**Путь запроса, который доказывают e2e evals:**
-
-```text
-HTTP POST → KlmRuntime → ModelRouter → response
-  → user event + assistant feedback saved
-  → model_calls + audit_logs written
-  → MCP store (separate connection) reads same project state
-```
 
 ---
 
-## Phase 2.3 — следующее
+## Phase 2.3 — ✅ (2026-05-29)
+
+Observability endpoints + demo/live project split.
+
+| # | Задача | Статус |
+|---|--------|--------|
+| 1 | `GET /v1/projects/:id/events` | ✅ |
+| 2 | `GET /v1/projects/:id/memory-chunks` | ✅ |
+| 3 | `GET /v1/admin/model-calls` | ✅ |
+| 4 | `GET /v1/admin/audit-logs` | ✅ |
+| 5 | Tenant boundary (403 on project mismatch) | ✅ |
+| 6 | Pagination (limit max 100, cursor) | ✅ |
+| 7 | `KLM_DEMO_PROJECT_ID` / `KLM_LIVE_PROJECT_ID` split | ✅ |
+| 8 | Observability e2e eval | ✅ |
+
+**Demo vs live:**
+
+| Project | UUID | Use |
+|---------|------|-----|
+| Demo | `...0003` | `eval:e2e`, `record:demo` |
+| Live | `...0005` | MCP/Cursor, `record:live` |
+
+---
+
+## Phase 2.4 — следующее
+
+Codebase indexer — files, functions, routes, imports, schemas.
 
 | # | Задача |
 |---|--------|
-| 1 | `model_calls` cost/latency dashboard endpoint |
-| 2 | Ручной smoke test guide в docs |
+| 1 | File/function/class index |
+| 2 | Route and dependency graph |
+| 3 | Semantic chunks from codebase structure |
 
 ---
 
-## Phase 3 — после Phase 2.3
+## Phase 3 — после Phase 2.4
 
 | # | Задача |
 |---|--------|
@@ -68,38 +85,38 @@ pnpm db:seed
 pnpm build
 pnpm eval                  # unit (in-memory)
 pnpm eval:integration      # PostgreSQL components
-pnpm eval:e2e              # full runtime path (HTTP + stream + MCP store)
+pnpm eval:e2e              # full runtime path + observability
+pnpm record:demo           # mock → demo project
+pnpm record:live           # OpenRouter → live project
 pnpm dev:api
 pnpm dev:mcp
 ```
 
-### Smoke test (ручной)
+### Smoke test — observability (PowerShell)
 
-```bash
-cp .env.example .env
-pnpm docker:up && pnpm db:migrate && pnpm db:seed
-pnpm dev:api
+```powershell
+cd klm-runtime
+pnpm dev:api   # перезапусти, если был старый процесс на :3100
+
+pnpm smoke:observability
+# live project:
+pnpm smoke:observability -ProjectId 00000000-0000-4000-8000-000000000005
 ```
 
-```bash
-curl http://localhost:3100/v1/chat/completions \
-  -H "Authorization: Bearer klm_dev_key_change_me" \
-  -H "Content-Type: application/json" \
-  -H "X-KLM-Organization-Id: 00000000-0000-4000-8000-000000000001" \
-  -H "X-KLM-Workspace-Id: 00000000-0000-4000-8000-000000000002" \
-  -H "X-KLM-Project-Id: 00000000-0000-4000-8000-000000000003" \
-  -H "X-KLM-User-Id: 00000000-0000-4000-8000-000000000004" \
-  -d '{"model":"klm-auto","messages":[{"role":"user","content":"Add track upload endpoint with auth and rate limit."}]}'
+Или вручную (`Invoke-RestMethod`, не bash `curl -H`):
+
+```powershell
+$h = @{
+  Authorization = "Bearer klm_dev_key_change_me"
+  "X-KLM-Organization-Id" = "00000000-0000-4000-8000-000000000001"
+  "X-KLM-Workspace-Id" = "00000000-0000-4000-8000-000000000002"
+  "X-KLM-Project-Id" = "00000000-0000-4000-8000-000000000003"
+  "X-KLM-User-Id" = "00000000-0000-4000-8000-000000000004"
+}
+Invoke-RestMethod -Uri "http://localhost:3100/v1/projects/00000000-0000-4000-8000-000000000003/events?limit=20" -Headers $h | ConvertTo-Json -Depth 10
 ```
 
-Проверка в БД:
-
-```sql
-SELECT count(*) FROM events;
-SELECT count(*) FROM model_calls;
-SELECT count(*) FROM audit_logs;
-SELECT * FROM project_states LIMIT 1;
-```
+**404 на `/events`?** Старый `dev:api` без Phase 2.3 — останови все процессы на порту 3100 и перезапусти.
 
 ---
 
@@ -110,3 +127,4 @@ SELECT * FROM project_states LIMIT 1;
 | 2026-05-29 | Phase 2 product |
 | 2026-05-29 | Phase 2.1 dedup + router audit + CI |
 | 2026-05-29 | Phase 2.2 e2e evals + KLM Runtime seed |
+| 2026-05-29 | Phase 2.3 observability endpoints + demo/live split |

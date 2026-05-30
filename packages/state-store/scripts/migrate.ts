@@ -2,6 +2,9 @@ import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import pg from "pg";
+import { loadRootEnv } from "./load-env.js";
+
+loadRootEnv();
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
