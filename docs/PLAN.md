@@ -123,6 +123,8 @@ Read-only query over structured codebase index.
 
 **P0:** tenant boundary on all 4 endpoints, limit max 100, no file content, secret path SQL + runtime exclusion, `parseSearchKind` allowlist, search metadata-only (no memory_chunks), MCP projectId from tenant only.
 
+**P1 fix (post-acceptance):** SQL filter excludes root-level ignored dirs (`dist/`, `build/`, …) — not only nested `%/dist/%`.
+
 ---
 
 ## Phase 2.6 — следующее

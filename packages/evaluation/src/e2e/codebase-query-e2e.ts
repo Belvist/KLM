@@ -30,6 +30,8 @@ function collectPaths(items: Array<{ relativePath?: string; filePath?: string }>
 
 const SECRET_FIXTURE_PATHS = [".env", ".npmrc", "private.pem", "id_rsa"] as const;
 
+const IGNORED_DIR_FIXTURE_PATHS = ["dist/leak.ts", "build/leak.ts"] as const;
+
 async function insertDefensiveSecretFixtures(pool: pg.Pool, projectId: string): Promise<void> {
   for (const relativePath of SECRET_FIXTURE_PATHS) {
     const fileRes = await pool.query<{ id: string }>(
@@ -66,6 +68,22 @@ async function insertDefensiveSecretFixtures(pool: pg.Pool, projectId: string): 
   }
 }
 
+async function insertIgnoredDirFixtures(pool: pg.Pool, projectId: string): Promise<void> {
+  for (const relativePath of IGNORED_DIR_FIXTURE_PATHS) {
+    await pool.query(
+      `INSERT INTO code_files (project_id, relative_path, content_hash, language, line_count)
+       VALUES ($1, $2, $3, 'typescript', 1)
+       ON CONFLICT (project_id, relative_path)
+       DO UPDATE SET content_hash = EXCLUDED.content_hash`,
+      [projectId, relativePath, `fixture-${relativePath}`]
+    );
+  }
+}
+
+function pathsIncludeIgnoredDirFixtures(paths: string[]): string[] {
+  return IGNORED_DIR_FIXTURE_PATHS.filter((fixture) => paths.includes(fixture));
+}
+
 function pathsIncludeSecretFixtures(paths: string[]): string[] {
   return SECRET_FIXTURE_PATHS.filter((secret) =>
     paths.some((p) => p === secret || p.includes(secret) || p.endsWith(`/${secret}`))
@@ -98,6 +116,7 @@ export async function runCodebaseQueryE2e(pool: pg.Pool, results: EvalResult[]):
   }
 
   await insertDefensiveSecretFixtures(pool, projectId);
+  await insertIgnoredDirFixtures(pool, projectId);
 
   const klmApp = await createKlmApp({ reset: true });
   const { app } = await buildGateway({ klmApp, logger: false });
@@ -244,6 +263,22 @@ export async function runCodebaseQueryE2e(pool: pg.Pool, results: EvalResult[]):
       searchLeaks.length > 0
         ? `search leaked: ${searchLeaks.join(", ")}`
         : "search over structured metadata did not return secret fixture paths"
+    );
+
+    const ignoredDirFiles = await reader.listFiles({ projectId, limit: 100, q: "leak" });
+    const ignoredDirRoutes = await reader.listRoutes({ projectId, limit: 100, path: "leak" });
+    const ignoredDirPaths = [
+      ...collectPaths(ignoredDirFiles.items),
+      ...collectPaths(ignoredDirRoutes.items),
+    ];
+    const leakedIgnoredDirs = pathsIncludeIgnoredDirFixtures(ignoredDirPaths);
+    record(
+      results,
+      "codebase-query-defensive-root-ignored-dirs-hidden",
+      leakedIgnoredDirs.length === 0,
+      leakedIgnoredDirs.length > 0
+        ? `leaked ignored-dir fixtures: ${leakedIgnoredDirs.join(", ")}`
+        : `root/nested ignored dirs not returned (${IGNORED_DIR_FIXTURE_PATHS.join(", ")})`
     );
   } finally {
     await reader.close();

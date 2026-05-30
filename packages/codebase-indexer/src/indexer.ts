@@ -1,4 +1,5 @@
 import pg from "pg";
+import { ignoredDirPathMatchSql } from "./security-path.js";
 import { sha256Content } from "./hash.js";
 import { parseFile } from "./parser.js";
 import { scanCodebase } from "./scanner.js";
@@ -213,15 +214,7 @@ export async function hasIgnoredPathIndexed(pool: pg.Pool, projectId: string): P
   const res = await pool.query<{ c: number }>(
     `SELECT COUNT(*)::int AS c FROM code_files
      WHERE project_id = $1 AND (
-       relative_path LIKE '%node_modules/%'
-       OR relative_path LIKE '%/dist/%'
-       OR relative_path LIKE '%/build/%'
-       OR relative_path LIKE '%/.git/%'
-       OR relative_path LIKE '%/.klm-data/%'
-       OR relative_path LIKE '%/coverage/%'
-       OR relative_path LIKE '%/.next/%'
-       OR relative_path LIKE '%/.turbo/%'
-       OR relative_path LIKE '%/.cache/%'
+       ${ignoredDirPathMatchSql("relative_path")}
      )`,
     [projectId]
   );
