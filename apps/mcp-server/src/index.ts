@@ -1,25 +1,61 @@
 #!/usr/bin/env node
-import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+import { config } from "dotenv";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
-import { createKlmApp, getKlmEnvironment } from "@klm/bootstrap";
+import {
+  createKlmApp,
+  resolveProjectContext,
+  newRequestId,
+  type ResolvedProjectContext,
+} from "@klm/bootstrap";
+import { resolveMcpWorkspaceRoot } from "@klm/project-resolver";
 import { CodebaseQueryReader, handleCodebaseSearch } from "@klm/codebase-indexer";
 
-const PROJECT_ID = process.env.KLM_PROJECT_ID ?? "";
-const WORKSPACE_ID = process.env.KLM_WORKSPACE_ID ?? "";
-const USER_ID = process.env.KLM_USER_ID ?? "";
-const ORG_ID = process.env.KLM_ORGANIZATION_ID ?? "";
-
-const env = getKlmEnvironment();
-if (!PROJECT_ID || !WORKSPACE_ID || !USER_ID) {
-  const msg =
-    "KLM MCP requires KLM_PROJECT_ID, KLM_WORKSPACE_ID, KLM_USER_ID (fixed UUIDs, shared with API)";
-  if (env === "production") {
-    console.error(msg);
-    process.exit(1);
+function loadEnv(): void {
+  const runtimeRoot =
+    process.env.KLM_RUNTIME_ROOT ??
+    resolve(dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
+  const envPath = join(runtimeRoot, ".env");
+  if (existsSync(envPath)) {
+    config({ path: envPath });
   }
-  console.error(`[warn] ${msg} — using dev defaults`);
+}
+
+loadEnv();
+
+const workspaceRoot = resolveMcpWorkspaceRoot();
+
+let projectCtx: ResolvedProjectContext;
+
+try {
+  projectCtx = await resolveProjectContext(workspaceRoot, {
+    mcp: true,
+    autoRegister: true,
+  });
+} catch (err) {
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(`[klm-mcp] fatal: ${msg}`);
+  process.exit(1);
+}
+
+process.env.KLM_PROJECT_ID = projectCtx.manifest.projectId;
+
+const ORG_ID = projectCtx.tenant.organizationId;
+const WORKSPACE_ID = projectCtx.tenant.workspaceId;
+const USER_ID = projectCtx.tenant.userId;
+const PROJECT_ID = projectCtx.manifest.projectId;
+
+console.error(
+  `[klm-mcp] workspace=${workspaceRoot} project=${PROJECT_ID} index.files=${projectCtx.indexStats.files}`
+);
+if (!projectCtx.indexed) {
+  console.error(
+    `[klm-mcp] warn: no codebase index — run: pnpm index:codebase -- --root "${projectCtx.manifest.rootPath}"`
+  );
 }
 
 const { store, runtime } = await createKlmApp();
@@ -34,11 +70,11 @@ const server = new McpServer({
 
 function tenant() {
   return {
-    organizationId: ORG_ID || "00000000-0000-4000-8000-000000000001",
-    workspaceId: WORKSPACE_ID || "00000000-0000-4000-8000-000000000002",
-    projectId: PROJECT_ID || "00000000-0000-4000-8000-000000000003",
-    userId: USER_ID || "00000000-0000-4000-8000-000000000004",
-    requestId: randomUUID(),
+    organizationId: ORG_ID,
+    workspaceId: WORKSPACE_ID,
+    projectId: PROJECT_ID,
+    userId: USER_ID,
+    requestId: newRequestId(),
   };
 }
 
@@ -80,6 +116,42 @@ server.resource("project-invariants", "project://invariants", async () => {
     ],
   };
 });
+
+server.tool(
+  "klm_project_status",
+  "KLM link status: project id, index stats, memory availability",
+  {},
+  async () => {
+    const pid = tenant().projectId;
+    const [state, indexStats] = await Promise.all([
+      store.getProjectState(pid),
+      resolveProjectContext(workspaceRoot, { mcp: true, autoRegister: false }),
+    ]);
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              workspaceRoot,
+              manifest: projectCtx.manifest,
+              index: indexStats.indexStats,
+              indexed: indexStats.indexed,
+              projectRegistered: Boolean(state),
+              projectName: state?.name ?? projectCtx.manifest.name,
+              invariants: state?.invariants.length ?? 0,
+              decisions: state?.decisions.length ?? 0,
+              codebaseActivation: process.env.KLM_CODEBASE_ACTIVATION === "true",
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  }
+);
 
 server.tool(
   "klm_analyze_task",
@@ -196,7 +268,9 @@ server.prompt(
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("KLM MCP Server running (shared store with API via KLM_STATE_PATH / DATABASE_URL)");
+  console.error(
+    `KLM MCP running — project ${PROJECT_ID} (${projectCtx.manifest.name}), store=${DATABASE_URL ? "postgres" : "file"}`
+  );
 
   process.on("SIGINT", async () => {
     await codebaseReader?.close();
