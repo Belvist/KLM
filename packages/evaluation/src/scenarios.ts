@@ -177,9 +177,11 @@ export async function evalDecisionDedup(): Promise<EvalResult> {
 }
 
 import { runCodebaseActivatorEvals } from "./codebase-activator-eval.js";
+import { runMemoryPipelineEvals } from "./memory-pipeline-eval.js";
+import { runProjectResolverEvals } from "./project-resolver-eval.js";
 
 export async function runAllEvals(): Promise<EvalResult[]> {
-  const [core, activator] = await Promise.all([
+  const [core, activator, memory, resolver] = await Promise.all([
     Promise.all([
       evalInvariantRespect(),
       evalComplexityPenalty(),
@@ -187,6 +189,8 @@ export async function runAllEvals(): Promise<EvalResult[]> {
       evalDecisionDedup(),
     ]),
     runCodebaseActivatorEvals(),
+    runMemoryPipelineEvals(),
+    runProjectResolverEvals(),
   ]);
-  return [...core, ...activator];
+  return [...core, ...activator, ...memory, ...resolver];
 }
