@@ -1,7 +1,15 @@
 import { randomUUID } from "node:crypto";
 import pg from "pg";
 
-export type MemoryChunkType = "decision" | "invariant" | "event" | "principle" | "risk";
+export type MemoryChunkType =
+  | "decision"
+  | "invariant"
+  | "event"
+  | "principle"
+  | "risk"
+  | "code_file"
+  | "code_symbol"
+  | "code_route";
 
 export interface MemoryChunkRecord {
   id: string;
