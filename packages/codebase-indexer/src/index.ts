@@ -38,3 +38,27 @@ export {
   DEFAULT_MAX_FILE_BYTES,
 } from "./ignore.js";
 export type { ScanOptions } from "./scanner.js";
+export {
+  CodebaseQueryReader,
+  parseQueryLimit,
+  MAX_QUERY_LIMIT,
+  DEFAULT_QUERY_LIMIT,
+  type PaginatedResult,
+  type CodeFileRow,
+  type CodeRouteRow,
+  type CodeSymbolRow,
+  type CodeDependencyRow,
+  type CodebaseSearchResult,
+} from "./query-reader.js";
+export { isSafeQueryPath, filterSafePaths, SAFE_CODE_FILE_PATH_SQL } from "./security-path.js";
+export {
+  handleCodebaseSearch,
+  type CodebaseSearchToolInput,
+  type CodebaseSearchToolResult,
+} from "./search-handler.js";
+export {
+  parseSearchKind,
+  SEARCH_KINDS,
+  InvalidSearchKindError,
+  type SearchKind,
+} from "./search-kind.js";
