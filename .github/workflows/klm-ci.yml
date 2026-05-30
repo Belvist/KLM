@@ -60,4 +60,10 @@ jobs:
 
       - run: pnpm eval:integration
 
+      - name: Codebase indexer eval (semantic mock)
+        env:
+          KLM_SEMANTIC_MEMORY: "true"
+          KLM_EMBEDDING_PROVIDER: mock
+        run: pnpm eval:codebase-index
+
       - run: pnpm eval:e2e

@@ -73,10 +73,17 @@ async function main(): Promise<void> {
     const hasModelCalls = await tableExists(pool, "model_calls");
     const hasMigrations = await tableExists(pool, "schema_migrations");
 
+    const hasCodeFiles = await tableExists(pool, "code_files");
+
     record(
       "postgres-migrations-applied",
-      hasProjectStates && hasMemoryChunks && hasAuditLogs && hasModelCalls && hasMigrations,
-      `tables: project_states=${hasProjectStates} memory_chunks=${hasMemoryChunks} audit=${hasAuditLogs} model_calls=${hasModelCalls}`
+      hasProjectStates &&
+        hasMemoryChunks &&
+        hasAuditLogs &&
+        hasModelCalls &&
+        hasMigrations &&
+        hasCodeFiles,
+      `tables: project_states=${hasProjectStates} memory_chunks=${hasMemoryChunks} audit=${hasAuditLogs} model_calls=${hasModelCalls} code_files=${hasCodeFiles}`
     );
 
     const projectId = process.env.KLM_DEMO_PROJECT_ID ?? "00000000-0000-4000-8000-000000000003";

@@ -8,6 +8,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "eval": "node --import tsx src/run.ts",
     "eval:integration": "node --import tsx src/integration/run.ts",
+    "eval:codebase-index": "node --import tsx src/integration/codebase-indexer-eval.ts",
     "eval:e2e": "node --import tsx src/e2e/run.ts",
     "record:demo": "node --import tsx src/record-demo.ts",
     "record:live": "node --import tsx src/record-live.ts"
@@ -16,6 +17,7 @@
     "@klm/api": "workspace:*",
     "@klm/audit": "workspace:*",
     "@klm/bootstrap": "workspace:*",
+    "@klm/codebase-indexer": "workspace:*",
     "@klm/core": "workspace:*",
     "@klm/memory-core": "workspace:*",
     "@klm/model-adapters": "workspace:*",
