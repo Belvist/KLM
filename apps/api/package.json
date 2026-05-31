@@ -19,6 +19,8 @@
     "@klm/audit": "workspace:*",
     "@klm/bootstrap": "workspace:*",
     "@klm/codebase-indexer": "workspace:*",
+    "@klm/impact-analyzer": "workspace:*",
+    "@klm/state-store": "workspace:*",
     "@klm/core": "workspace:*",
     "dotenv": "^17.4.2",
     "fastify": "^5.2.1"

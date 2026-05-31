@@ -14,6 +14,7 @@ import {
 } from "@klm/bootstrap";
 import { resolveMcpWorkspaceRoot } from "@klm/project-resolver";
 import { CodebaseQueryReader, handleCodebaseSearch } from "@klm/codebase-indexer";
+import { ImpactAnalyzer, handleImpactAnalyze } from "@klm/impact-analyzer";
 
 function loadEnv(): void {
   const runtimeRoot =
@@ -62,6 +63,17 @@ const { store, runtime } = await createKlmApp();
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const codebaseReader = DATABASE_URL ? new CodebaseQueryReader(DATABASE_URL) : null;
+const impactAnalyzer =
+  DATABASE_URL && codebaseReader
+    ? new ImpactAnalyzer(codebaseReader, {
+        getInvariants: (pid) => store.getInvariants(pid),
+        getDecisions: (pid) => store.getDecisions(pid),
+        getRisks: async (pid) => {
+          const state = await store.getProjectState(pid);
+          return state?.risks ?? [];
+        },
+      })
+    : null;
 
 const server = new McpServer({
   name: "klm-runtime",
@@ -210,6 +222,25 @@ server.tool(
     const result = await handleCodebaseSearch(codebaseReader, tenant().projectId, {
       query,
       kind,
+      limit,
+    });
+
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+server.tool(
+  "klm_analyze_impact",
+  "Read-only impact analysis: affected files/routes/symbols, related invariants/decisions, risks, test hints (metadata only)",
+  {
+    task: z.string().describe("Task description to analyze"),
+    limit: z.number().int().min(1).max(100).optional().describe("Max items per category"),
+  },
+  async ({ task, limit }) => {
+    const result = await handleImpactAnalyze(impactAnalyzer, tenant().projectId, {
+      task,
       limit,
     });
 
