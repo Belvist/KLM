@@ -20,6 +20,7 @@
     "@klm/bootstrap": "workspace:*",
     "@klm/codebase-indexer": "workspace:*",
     "@klm/impact-analyzer": "workspace:*",
+    "@klm/code-verifier": "workspace:*",
     "@klm/plan-verifier": "workspace:*",
     "@klm/state-store": "workspace:*",
     "@klm/core": "workspace:*",

@@ -9,6 +9,7 @@ import { registerObservabilityRoutes } from "./routes/observability.js";
 import { registerCodebaseRoutes } from "./routes/codebase.js";
 import { registerImpactRoutes } from "./routes/impact.js";
 import { registerPlanVerifyRoutes } from "./routes/plan-verify.js";
+import { registerCodeVerifyRoutes } from "./routes/code-verify.js";
 
 const API_KEY = process.env.KLM_API_KEY ?? "klm_dev_key_change_me";
 
@@ -175,6 +176,7 @@ export async function buildGateway(options: BuildGatewayOptions = {}) {
     registerCodebaseRoutes(app, connectionString);
     registerImpactRoutes(app, connectionString, store);
     registerPlanVerifyRoutes(app, connectionString, store);
+    registerCodeVerifyRoutes(app, connectionString, store);
   }
 
   return { app, store, runtime, klm };

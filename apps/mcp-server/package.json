@@ -16,6 +16,7 @@
     "@klm/bootstrap": "workspace:*",
     "@klm/codebase-indexer": "workspace:*",
     "@klm/impact-analyzer": "workspace:*",
+    "@klm/code-verifier": "workspace:*",
     "@klm/plan-verifier": "workspace:*",
     "@klm/project-resolver": "workspace:*",
     "dotenv": "^17.4.2",

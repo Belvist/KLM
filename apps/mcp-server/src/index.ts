@@ -16,6 +16,7 @@ import { resolveMcpWorkspaceRoot } from "@klm/project-resolver";
 import { CodebaseQueryReader, handleCodebaseSearch } from "@klm/codebase-indexer";
 import { ImpactAnalyzer, handleImpactAnalyze } from "@klm/impact-analyzer";
 import { PlanVerifier, handlePlanVerify } from "@klm/plan-verifier";
+import { CodeVerifier, handleCodeVerify } from "@klm/code-verifier";
 
 function loadEnv(): void {
   const runtimeRoot =
@@ -77,6 +78,7 @@ const impactAnalyzer =
     : null;
 
 const planVerifier = impactAnalyzer ? new PlanVerifier(impactAnalyzer) : null;
+const codeVerifier = impactAnalyzer ? new CodeVerifier(impactAnalyzer) : null;
 
 const server = new McpServer({
   name: "klm-runtime",
@@ -284,29 +286,61 @@ server.tool(
   }
 );
 
+const implementationSchema = z.object({
+  summary: z.string().describe("Implementation summary (not full file dump)"),
+  files: z.array(z.string()).max(100).optional(),
+  routes: z
+    .array(z.object({ httpMethod: z.string(), path: z.string() }))
+    .max(50)
+    .optional(),
+  tests: z.array(z.string()).max(50).optional(),
+});
+
 server.tool(
   "klm_verify_code",
-  "Verify code or architecture against project invariants",
-  { content: z.string().describe("Code or architecture to verify") },
-  async ({ content }) => {
-    const invariants = await store.getInvariants(tenant().projectId);
-    const violations = invariants
-      .filter((inv) => {
-        const lower = content.toLowerCase();
-        if (inv.rule.toLowerCase().includes("auth") && lower.includes("endpoint")) {
-          return !lower.includes("auth");
-        }
-        return false;
+  "Verify implemented code/summary against impact, invariants, and optional plan report (read-only)",
+  {
+    task: z.string().describe("Task description (same as impact/plan analysis)"),
+    implementation: implementationSchema.describe(
+      "What was implemented: summary, optional files/routes/tests"
+    ),
+    limit: z.number().int().min(1).max(100).optional().describe("Max impact items per category"),
+    planReport: z
+      .object({
+        verdict: z.enum(["safe", "needs_changes", "blocked"]),
+        missingTests: z.array(z.string()).optional(),
+        requiredChanges: z.array(z.string()).optional(),
       })
-      .map((inv) => inv.rule);
+      .optional()
+      .describe("Optional prior plan verification summary for cross-check"),
+  },
+  async ({ task, implementation, limit, planReport }) => {
+    const normalizedPlanReport = planReport
+      ? {
+          taskPreview: "",
+          taskHash: "",
+          planPreview: "",
+          planHash: "",
+          verdict: planReport.verdict,
+          violations: [],
+          missingTests: planReport.missingTests ?? [],
+          riskNotes: [],
+          requiredChanges: planReport.requiredChanges ?? [],
+          confidence: "medium" as const,
+          impactConfidence: "medium" as const,
+          metadataOnly: true as const,
+        }
+      : undefined;
+
+    const result = await handleCodeVerify(codeVerifier, tenant().projectId, {
+      task,
+      implementation,
+      limit,
+      planReport: normalizedPlanReport,
+    });
 
     return {
-      content: [
-        {
-          type: "text" as const,
-          text: JSON.stringify({ passed: violations.length === 0, violations }, null, 2),
-        },
-      ],
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
     };
   }
 );
