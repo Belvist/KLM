@@ -162,15 +162,15 @@ Runtime and audit expose structured codebase activation telemetry (no raw user i
 
 **Scope:** automatic resolution for **CLI + MCP**. **HTTP API remains header-only** until API middleware lands.
 
-| #   | Задача                                              | Статус |
-| --- | --------------------------------------------------- | ------ |
-| 1   | `@klm/project-resolver` (fingerprint + manifest)    | ✅     |
-| 2   | Postgres `projects` table (`007_projects.sql`)      | ✅     |
-| 3   | `pnpm klm:init` / `pnpm klm:project`                | ✅     |
-| 4   | index/import without `--project-id` when manifest   | ✅     |
-| 5   | MCP: `KLM_WORKSPACE_ROOT`, strict cwd, no silent init | ✅  |
-| 6   | Fingerprint mismatch / identity conflict → fail     | ✅     |
-| 7   | Unit + e2e resolver evals                           | ✅     |
+| #   | Задача                                                | Статус |
+| --- | ----------------------------------------------------- | ------ |
+| 1   | `@klm/project-resolver` (fingerprint + manifest)      | ✅     |
+| 2   | Postgres `projects` table (`007_projects.sql`)        | ✅     |
+| 3   | `pnpm klm:init` / `pnpm klm:project`                  | ✅     |
+| 4   | index/import without `--project-id` when manifest     | ✅     |
+| 5   | MCP: `KLM_WORKSPACE_ROOT`, strict cwd, no silent init | ✅     |
+| 6   | Fingerprint mismatch / identity conflict → fail       | ✅     |
+| 7   | Unit + e2e resolver evals                             | ✅     |
 
 See [PROJECTS.md](./PROJECTS.md).
 
@@ -182,9 +182,23 @@ See [PROJECTS.md](./PROJECTS.md).
 
 ---
 
-## Phase 2.7 — следующее
+## Phase 2.7 — Impact Analysis (2026-05-31)
 
-Impact analysis / test suggestions on top of codebase map — **not** autonomous code changes.
+Read-only structured impact report before code changes.
+
+| #   | Задача                                          | Статус |
+| --- | ----------------------------------------------- | ------ |
+| 1   | `@klm/impact-analyzer` core (metadata-only)     | ✅     |
+| 2   | `POST /v1/projects/:projectId/impact/analyze`   | ✅     |
+| 3   | MCP `klm_analyze_impact` (no projectId in args) | ✅     |
+| 4   | E2e: hits, 403, limit, empty task, no content   | ✅     |
+| 5   | P0: read-only, tenant-safe, fail-soft           | ✅     |
+
+See [IMPACT.md](./IMPACT.md).
+
+**Acceptance:** pending P0 gate + CI green (hold commit/push).
+
+**Not in 2.7:** patch generation, autonomous edits, chat capture, LLM reasoning (v1 is rule-based/deterministic).
 
 ---
 
@@ -267,5 +281,5 @@ Invoke-RestMethod -Uri "http://localhost:3100/v1/projects/00000000-0000-4000-800
 | 2026-05-30 | Phase 2.3.1 content redaction + includeContent controls |
 | 2026-05-30 | Phase 2.3.2 observability hardening gate                |
 | 2026-05-30 | Phase 2.3.3 model_calls outcome telemetry               |
-| 2026-05-30 | Phase 2.6.2 project profile isolation (music ...105)  |
-| 2026-05-31 | Phase 2.6.3 automatic project resolution              |
+| 2026-05-30 | Phase 2.6.2 project profile isolation (music ...105)    |
+| 2026-05-31 | Phase 2.6.3 automatic project resolution                |
