@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@klm/impact-analyzer": "workspace:*",
+    "@klm/plan-verifier": "workspace:*",
     "@klm/project-resolver": "workspace:*",
     "@klm/api": "workspace:*",
     "@klm/audit": "workspace:*",
