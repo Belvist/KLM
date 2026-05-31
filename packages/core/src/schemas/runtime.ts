@@ -177,3 +177,117 @@ export function publicCodebaseActivationReport(
     },
   };
 }
+
+export const ImpactConfidenceSchema = z.enum(["low", "medium", "high"]);
+export type ImpactConfidence = z.infer<typeof ImpactConfidenceSchema>;
+
+export const ImpactAffectedFileSchema = z.object({
+  path: z.string(),
+  language: z.string().optional(),
+  score: z.number().min(0).max(1),
+});
+
+export const ImpactAffectedRouteSchema = z.object({
+  httpMethod: z.string(),
+  path: z.string(),
+  filePath: z.string(),
+  score: z.number().min(0).max(1),
+});
+
+export const ImpactAffectedSymbolSchema = z.object({
+  name: z.string(),
+  filePath: z.string(),
+  symbolType: z.string().optional(),
+  score: z.number().min(0).max(1),
+});
+
+export const ImpactRelatedInvariantSchema = z.object({
+  id: z.string().uuid(),
+  rule: z.string(),
+  severity: z.enum(["soft", "hard", "critical"]),
+  score: z.number().min(0).max(1),
+});
+
+export const ImpactRelatedDecisionSchema = z.object({
+  id: z.string().uuid(),
+  decision: z.string(),
+  score: z.number().min(0).max(1),
+});
+
+export const ImpactRiskItemSchema = z.object({
+  message: z.string(),
+  severity: z.enum(["low", "medium", "high", "critical"]),
+  source: z.enum(["invariant", "decision", "coverage"]),
+});
+
+export const ImpactSuggestedTestSchema = z.object({
+  kind: z.enum(["e2e", "integration", "unit", "manual"]),
+  description: z.string(),
+});
+
+export const ImpactAnalysisReportSchema = z.object({
+  task: z.string(),
+  searchTerms: z.array(z.string()),
+  affectedFiles: z.array(ImpactAffectedFileSchema),
+  affectedRoutes: z.array(ImpactAffectedRouteSchema),
+  affectedSymbols: z.array(ImpactAffectedSymbolSchema),
+  relatedInvariants: z.array(ImpactRelatedInvariantSchema),
+  relatedDecisions: z.array(ImpactRelatedDecisionSchema),
+  risks: z.array(ImpactRiskItemSchema),
+  suggestedTests: z.array(ImpactSuggestedTestSchema),
+  confidence: ImpactConfidenceSchema,
+  metadataOnly: z.literal(true),
+});
+
+export type ImpactAnalysisReport = z.infer<typeof ImpactAnalysisReportSchema>;
+
+export const MAX_IMPACT_ITEMS = 100;
+export const MAX_IMPACT_TEXT_LENGTH = 240;
+
+export function emptyImpactReport(task = ""): ImpactAnalysisReport {
+  return {
+    task: task.slice(0, MAX_IMPACT_TEXT_LENGTH),
+    searchTerms: [],
+    affectedFiles: [],
+    affectedRoutes: [],
+    affectedSymbols: [],
+    relatedInvariants: [],
+    relatedDecisions: [],
+    risks: [],
+    suggestedTests: [],
+    confidence: "low",
+    metadataOnly: true,
+  };
+}
+
+/** API/MCP-safe view — bounded arrays and text, metadata paths only. */
+export function publicImpactAnalysisReport(
+  report: ImpactAnalysisReport,
+  limit = MAX_IMPACT_ITEMS
+): ImpactAnalysisReport {
+  const cap = Math.min(Math.max(1, limit), MAX_IMPACT_ITEMS);
+  const trim = (s: string) => s.trim().slice(0, MAX_IMPACT_TEXT_LENGTH);
+
+  return {
+    task: trim(report.task),
+    searchTerms: report.searchTerms.slice(0, 20),
+    affectedFiles: report.affectedFiles.slice(0, cap),
+    affectedRoutes: report.affectedRoutes.slice(0, cap),
+    affectedSymbols: report.affectedSymbols.slice(0, cap),
+    relatedInvariants: report.relatedInvariants.slice(0, cap).map((i) => ({
+      ...i,
+      rule: trim(i.rule),
+    })),
+    relatedDecisions: report.relatedDecisions.slice(0, cap).map((d) => ({
+      ...d,
+      decision: trim(d.decision),
+    })),
+    risks: report.risks.slice(0, cap).map((r) => ({ ...r, message: trim(r.message) })),
+    suggestedTests: report.suggestedTests.slice(0, cap).map((t) => ({
+      ...t,
+      description: trim(t.description),
+    })),
+    confidence: report.confidence,
+    metadataOnly: true,
+  };
+}

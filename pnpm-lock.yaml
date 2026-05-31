@@ -32,6 +32,12 @@ importers:
       '@klm/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@klm/impact-analyzer':
+        specifier: workspace:*
+        version: link:../../packages/impact-analyzer
+      '@klm/state-store':
+        specifier: workspace:*
+        version: link:../../packages/state-store
       dotenv:
         specifier: ^17.4.2
         version: 17.4.2
@@ -54,6 +60,9 @@ importers:
       '@klm/codebase-indexer':
         specifier: workspace:*
         version: link:../../packages/codebase-indexer
+      '@klm/impact-analyzer':
+        specifier: workspace:*
+        version: link:../../packages/impact-analyzer
       '@klm/project-resolver':
         specifier: workspace:*
         version: link:../../packages/project-resolver
@@ -188,6 +197,9 @@ importers:
       '@klm/core':
         specifier: workspace:*
         version: link:../core
+      '@klm/impact-analyzer':
+        specifier: workspace:*
+        version: link:../impact-analyzer
       '@klm/memory-core':
         specifier: workspace:*
         version: link:../memory-core
@@ -219,6 +231,19 @@ importers:
       tsx:
         specifier: ^4.19.3
         version: 4.22.3
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
+  packages/impact-analyzer:
+    dependencies:
+      '@klm/codebase-indexer':
+        specifier: workspace:*
+        version: link:../codebase-indexer
+      '@klm/core':
+        specifier: workspace:*
+        version: link:../core
+    devDependencies:
       typescript:
         specifier: ^5.8.2
         version: 5.9.3
