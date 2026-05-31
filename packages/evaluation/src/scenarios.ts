@@ -180,8 +180,10 @@ import { runCodebaseActivatorEvals } from "./codebase-activator-eval.js";
 import { runMemoryPipelineEvals } from "./memory-pipeline-eval.js";
 import { runProjectResolverEvals } from "./project-resolver-eval.js";
 
+import { runImpactAnalyzerEvals } from "./impact-analyzer-eval.js";
+
 export async function runAllEvals(): Promise<EvalResult[]> {
-  const [core, activator, memory, resolver] = await Promise.all([
+  const [core, activator, memory, resolver, impact] = await Promise.all([
     Promise.all([
       evalInvariantRespect(),
       evalComplexityPenalty(),
@@ -191,6 +193,7 @@ export async function runAllEvals(): Promise<EvalResult[]> {
     runCodebaseActivatorEvals(),
     runMemoryPipelineEvals(),
     runProjectResolverEvals(),
+    runImpactAnalyzerEvals(),
   ]);
-  return [...core, ...activator, ...memory, ...resolver];
+  return [...core, ...activator, ...memory, ...resolver, ...impact];
 }

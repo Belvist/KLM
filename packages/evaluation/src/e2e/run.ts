@@ -8,6 +8,7 @@ import { runObservabilityE2e } from "./observability-e2e.js";
 import { runSemanticMemoryE2e } from "./semantic-memory-e2e.js";
 import { runStreamMemoryE2e } from "./stream-memory-e2e.js";
 import { runProjectResolverE2e } from "./project-resolver-e2e.js";
+import { runImpactAnalysisE2e } from "./impact-analysis-e2e.js";
 import type { EvalResult } from "./helpers.js";
 import { printResults } from "./helpers.js";
 
@@ -31,6 +32,7 @@ async function main(): Promise<void> {
     await runStreamMemoryE2e(pool, results);
     await runMcpSharedStoreE2e(pool, results);
     await runProjectResolverE2e(pool, results);
+    await runImpactAnalysisE2e(pool, results);
   } finally {
     await pool.end();
   }

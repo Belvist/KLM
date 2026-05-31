@@ -75,8 +75,7 @@ Decisions:
   const updated = await store.getProjectState(projectId);
   results.push({
     name: "bulk-memory-update",
-    passed:
-      (updated?.decisions.length ?? 0) >= 1 && (updated?.invariants.length ?? 0) >= 2,
+    passed: (updated?.decisions.length ?? 0) >= 1 && (updated?.invariants.length ?? 0) >= 2,
     message: `decisions=${updated?.decisions.length} invariants=${updated?.invariants.length}`,
   });
 
@@ -97,7 +96,7 @@ Decisions:
       intent: {
         rawInput: "gesture",
         taskType: "question",
-        outputFormat: "text",
+        outputFormat: "explanation",
         qualityLevel: "balanced",
         entities: [],
         urgency: "normal",
@@ -129,7 +128,7 @@ Decisions:
       intent: {
         rawInput: "test",
         taskType: "question",
-        outputFormat: "text",
+        outputFormat: "explanation",
         qualityLevel: "balanced",
         entities: [],
         urgency: "normal",
