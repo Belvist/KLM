@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@klm/impact-analyzer": "workspace:*",
+    "@klm/code-verifier": "workspace:*",
     "@klm/plan-verifier": "workspace:*",
     "@klm/project-resolver": "workspace:*",
     "@klm/api": "workspace:*",
@@ -28,7 +29,8 @@
     "@klm/semantic-memory": "workspace:*",
     "@klm/state-store": "workspace:*",
     "@klm/verifier": "workspace:*",
-    "pg": "^8.14.1"
+    "pg": "^8.14.1",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@types/pg": "^8.11.11",
