@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+  hashCodeImplementation,
   hashImpactTask,
   hashImplementationPlan,
   sanitizeImpactTaskPreview,
@@ -384,6 +385,83 @@ export function publicPlanVerificationReport(
     requiredChanges: report.requiredChanges.slice(0, MAX_IMPACT_ITEMS).map(trim),
     confidence: report.confidence,
     impactConfidence: report.impactConfidence,
+    metadataOnly: true,
+  };
+}
+
+export const CodeVerdictSchema = z.enum(["pass", "needs_changes", "blocked"]);
+export type CodeVerdict = z.infer<typeof CodeVerdictSchema>;
+
+export const CodeImplementationSchema = z.object({
+  summary: z.string().min(1).max(8000),
+  files: z.array(z.string().max(240)).max(100).optional(),
+  routes: z.array(ImplementationPlanRouteSchema).max(50).optional(),
+  tests: z.array(z.string().max(500)).max(50).optional(),
+});
+
+export type CodeImplementation = z.infer<typeof CodeImplementationSchema>;
+
+export const CodeViolationSchema = PlanViolationSchema;
+export type CodeViolation = z.infer<typeof CodeViolationSchema>;
+
+export const CodeVerificationReportSchema = z.object({
+  taskPreview: z.string(),
+  taskHash: z.string(),
+  contentPreview: z.string(),
+  contentHash: z.string(),
+  verdict: CodeVerdictSchema,
+  violations: z.array(CodeViolationSchema),
+  missingTests: z.array(z.string()),
+  securityRisks: z.array(z.string()),
+  scopeDrift: z.array(z.string()),
+  confidence: ImpactConfidenceSchema,
+  impactConfidence: ImpactConfidenceSchema,
+  planVerdict: PlanVerdictSchema.optional(),
+  metadataOnly: z.literal(true),
+});
+
+export type CodeVerificationReport = z.infer<typeof CodeVerificationReportSchema>;
+
+export type CodeVerificationBody = Omit<
+  CodeVerificationReport,
+  "taskPreview" | "taskHash" | "contentPreview" | "contentHash"
+>;
+
+export function normalizeCodeForHash(impl: CodeImplementation): string {
+  return JSON.stringify({
+    summary: impl.summary.trim(),
+    files: (impl.files ?? []).map((f) => f.trim()).sort(),
+    routes: (impl.routes ?? [])
+      .map((r) => ({ httpMethod: r.httpMethod.trim().toUpperCase(), path: r.path.trim() }))
+      .sort((a, b) => `${a.httpMethod}${a.path}`.localeCompare(`${b.httpMethod}${b.path}`)),
+    tests: (impl.tests ?? []).map((t) => t.trim()).sort(),
+  });
+}
+
+export function publicCodeVerificationReport(
+  rawTask: string,
+  implementation: CodeImplementation,
+  report: CodeVerificationBody
+): CodeVerificationReport {
+  const trim = (s: string) => s.trim().slice(0, MAX_PLAN_TEXT_LENGTH);
+
+  return {
+    taskPreview: sanitizeImpactTaskPreview(rawTask),
+    taskHash: hashImpactTask(rawTask),
+    contentPreview: sanitizeImpactTaskPreview(implementation.summary),
+    contentHash: hashCodeImplementation(normalizeCodeForHash(implementation)),
+    verdict: report.verdict,
+    violations: report.violations.slice(0, MAX_IMPACT_ITEMS).map((v) => ({
+      ...v,
+      rule: trim(v.rule),
+      message: trim(v.message),
+    })),
+    missingTests: report.missingTests.slice(0, MAX_IMPACT_ITEMS).map(trim),
+    securityRisks: report.securityRisks.slice(0, MAX_IMPACT_ITEMS).map(trim),
+    scopeDrift: report.scopeDrift.slice(0, MAX_IMPACT_ITEMS).map(trim),
+    confidence: report.confidence,
+    impactConfidence: report.impactConfidence,
+    planVerdict: report.planVerdict,
     metadataOnly: true,
   };
 }

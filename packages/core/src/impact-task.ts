@@ -32,3 +32,8 @@ export function hashImpactTask(raw: string): string {
 export function hashImplementationPlan(raw: string): string {
   return createHash("sha256").update(raw).digest("hex");
 }
+
+/** Stable hash for code verification input (summary/files/routes/tests). */
+export function hashCodeImplementation(raw: string): string {
+  return createHash("sha256").update(raw).digest("hex");
+}
