@@ -167,7 +167,11 @@ Impact and plan verify are read-only (metadata-only). They do not write memory.
 
 ## After writing code (CODE VERIFY)
 
-- Call **\`klm_verify_code\`** for written code — does not replace \`klm_verify_plan\`.
+When you have an implementation summary (not a full file dump):
+
+1. Call **\`klm_verify_code\`** with \`task\` and \`implementation\` (summary, files?, tests?).
+2. Optionally pass \`planReport\` for cross-check with plan verify.
+3. Does **not** replace \`klm_verify_plan\`. \`pass\` ≠ production approval. Read-only.
 
 Full flow: impact → verify_plan → code → verify_code → memory record.
 

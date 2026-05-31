@@ -221,31 +221,22 @@ See [PLAN_VERIFY.md](./PLAN_VERIFY.md).
 
 ---
 
-## Phase 2.9 — Code Verification Hardening (planned)
+## Phase 2.9 — Code Verification Hardening (2026-05-31)
 
 **code/diff/architecture → verify** against impact report, plan report, invariants, tenant/security rules, missing tests.
 
-| #   | Задача                                                              | Статус |
-| --- | ------------------------------------------------------------------- | ------ |
-| 1   | `@klm/code-verifier` (or harden existing) — structured verdict      | ⏳     |
-| 2   | Cross-check vs impact + plan reports (when provided)                | ⏳     |
-| 3   | `klm_verify_code` MCP + API parity with plan verifier safety        | ⏳     |
-| 4   | E2E: pass / needs_changes / blocked, 403, no secret echo, no writes | ⏳     |
+| #   | Задача                                                       | Статус |
+| --- | ------------------------------------------------------------ | ------ |
+| 1   | `@klm/code-verifier` — structured verdict                    | ✅     |
+| 2   | Cross-check vs impact + plan reports (when provided)         | ✅     |
+| 3   | `POST /v1/projects/:id/code/verify` + `klm_verify_code` MCP  | ✅     |
+| 4   | E2E: pass / needs_changes / blocked, 403, no echo, no writes | ✅     |
 
-**Target output:**
+See [CODE_VERIFY.md](./CODE_VERIFY.md).
 
-```json
-{
-  "verdict": "pass" | "needs_changes" | "blocked",
-  "violations": [],
-  "missingTests": [],
-  "securityRisks": [],
-  "scopeDrift": [],
-  "confidence": "medium"
-}
-```
+**Acceptance:** implemented locally; pending P0 gate + CI green + GitHub review (not accepted yet).
 
-**Not in 2.9:** patch generation, autonomous edits, PR workflow.
+**Not in 2.9:** patch generation, autonomous edits, PR workflow, formal proof (v1 is rule-based heuristic).
 
 **Prerequisite for Phase 3/4:** controlled patch proposal only after code verifier reaches plan-verifier parity.
 

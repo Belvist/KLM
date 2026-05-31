@@ -30,9 +30,13 @@ Impact и plan verify — read-only (metadata-only), в память не пиш
 
 ## После написания кода (CODE VERIFY)
 
-Когда есть код или архитектурный фрагмент:
+Когда есть реализация (summary + files/tests, не полный dump файлов):
 
-- Вызови **`klm_verify_code`** — это **не замена** `klm_verify_plan`, а проверка уже написанного кода.
+1. Вызови **`klm_verify_code`** с `task` и `implementation` (summary, files?, tests?).
+2. Опционально передай `planReport` для cross-check с plan verify.
+3. Это **не замена** `klm_verify_plan` — code verify проверяет уже написанное.
+
+`pass` ≠ production approval. Read-only, в память не пишет.
 
 Полный flow: **impact → verify_plan → code → verify_code → memory record**.
 
