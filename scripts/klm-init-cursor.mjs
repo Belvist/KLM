@@ -160,10 +160,16 @@ Project id: \`${init.manifest.projectId}\`
 Before non-trivial code changes (refactor, new feature, multi-file edit):
 
 1. Call **\`klm_analyze_impact\`** with the task description.
-2. Use the report to plan scope: affected files/routes/symbols, related invariants/decisions, risks, suggested tests.
-3. Call **\`klm_verify_code\`** for auth, API, tenancy, security-sensitive changes.
+2. Call **\`klm_verify_plan\`** with the same task and implementation plan (steps, files, tests).
+3. Do not write code until verdict is \`safe\` or required changes are addressed.
 
-Impact is read-only (metadata-only). It does not write memory.
+Impact and plan verify are read-only (metadata-only). They do not write memory.
+
+## After writing code (CODE VERIFY)
+
+- Call **\`klm_verify_code\`** for written code — does not replace \`klm_verify_plan\`.
+
+Full flow: impact → verify_plan → code → verify_code → memory record.
 
 ## After significant work (WRITE)
 

@@ -202,18 +202,20 @@ See [IMPACT.md](./IMPACT.md).
 
 ---
 
-## Phase 2.8 — Controlled Plan Verification (planned)
+## Phase 2.8 — Controlled Plan Verification (2026-05-31)
 
-Before code changes, not patches: **task → impact report → implementation plan → verify plan against invariants**.
+**task → impact → plan → verify** (read-only, no patches).
 
-| #   | Задача                                                               | Статус |
-| --- | -------------------------------------------------------------------- | ------ |
-| 1   | Plan input schema (steps, files, risks)                              | ⏳     |
-| 2   | Verify plan vs impact report + invariants (`klm_verify_plan` or API) | ⏳     |
-| 3   | MCP tool (no projectId in args)                                      | ⏳     |
-| 4   | E2E: safe plan pass, invariant violation fail, missing e2e hint      | ⏳     |
+| #   | Задача                                                              | Статус |
+| --- | ------------------------------------------------------------------- | ------ |
+| 1   | Plan input schema (steps, files, routes, tests)                     | ✅     |
+| 2   | `POST /v1/projects/:projectId/plans/verify` + `klm_verify_plan` MCP | ✅     |
+| 3   | Rule-based verdict vs impact + invariants                           | ✅     |
+| 4   | E2E: safe, blocked, missing e2e, 403, no plan echo                  | ✅     |
 
-Goal: agent gets explicit verdict — plan safe / violates INV-FE-\* / missing e2e / wrong route scope.
+See [PLAN_VERIFY.md](./PLAN_VERIFY.md).
+
+**Acceptance:** implemented locally; pending CI green + GitHub review (not accepted yet).
 
 **Not in 2.8:** patch generation, autonomous file edits.
 

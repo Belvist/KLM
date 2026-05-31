@@ -18,15 +18,23 @@ alwaysApply: true
 
 Не спрашивай «использовать KLM?» — **используй всегда**, если MCP доступен.
 
-## Перед изменениями кода (IMPACT + VERIFY)
+## Перед изменениями кода (IMPACT + PLAN VERIFY)
 
 Перед нетривиальными изменениями (рефакторинг, новая фича, несколько файлов):
 
 1. Вызови **`klm_analyze_impact`** с описанием задачи.
-2. Используй отчёт для плана: affected files/routes/symbols, invariants/decisions, risks, suggested tests.
-3. Вызови **`klm_verify_code`** для auth, endpoints, tenancy, memory, audit.
+2. Вызови **`klm_verify_plan`** с тем же task и планом (steps, files, tests).
+3. Не пиши код, пока verdict не `safe` или пока не закрыты `requiredChanges` / `missingTests`.
 
-Impact — read-only (metadata-only), в память не пишет.
+Impact и plan verify — read-only (metadata-only), в память не пишут.
+
+## После написания кода (CODE VERIFY)
+
+Когда есть код или архитектурный фрагмент:
+
+- Вызови **`klm_verify_code`** — это **не замена** `klm_verify_plan`, а проверка уже написанного кода.
+
+Полный flow: **impact → verify_plan → code → verify_code → memory record**.
 
 ## После значимой работы (WRITE — автоматически)
 
