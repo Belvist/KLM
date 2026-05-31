@@ -1,5 +1,6 @@
 export {
   buildPlanSearchText,
+  collectRiskNotes,
   computePlanVerdict,
   detectInvariantViolations,
   detectMissingSecurityTests,
@@ -7,6 +8,7 @@ export {
   detectOutOfScopeFiles,
   planMentionsE2e,
   planMentionsTestCoverage,
+  type PlanInvariantCheck,
 } from "./rules.js";
 export { responseExcludesSensitivePlanContent } from "./safety.js";
 export { PlanVerifier, parseImplementationPlan, type PlanVerifyOptions } from "./plan-verifier.js";

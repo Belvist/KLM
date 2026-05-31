@@ -26,6 +26,9 @@ importers:
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap
+      '@klm/code-verifier':
+        specifier: workspace:*
+        version: link:../../packages/code-verifier
       '@klm/codebase-indexer':
         specifier: workspace:*
         version: link:../../packages/codebase-indexer
@@ -60,6 +63,9 @@ importers:
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../../packages/bootstrap
+      '@klm/code-verifier':
+        specifier: workspace:*
+        version: link:../../packages/code-verifier
       '@klm/codebase-indexer':
         specifier: workspace:*
         version: link:../../packages/codebase-indexer
@@ -145,6 +151,22 @@ importers:
         specifier: ^5.8.2
         version: 5.9.3
 
+  packages/code-verifier:
+    dependencies:
+      '@klm/core':
+        specifier: workspace:*
+        version: link:../core
+      '@klm/impact-analyzer':
+        specifier: workspace:*
+        version: link:../impact-analyzer
+      '@klm/plan-verifier':
+        specifier: workspace:*
+        version: link:../plan-verifier
+    devDependencies:
+      typescript:
+        specifier: ^5.8.2
+        version: 5.9.3
+
   packages/codebase-indexer:
     dependencies:
       '@klm/core':
@@ -197,6 +219,9 @@ importers:
       '@klm/bootstrap':
         specifier: workspace:*
         version: link:../bootstrap
+      '@klm/code-verifier':
+        specifier: workspace:*
+        version: link:../code-verifier
       '@klm/codebase-indexer':
         specifier: workspace:*
         version: link:../codebase-indexer
@@ -233,6 +258,9 @@ importers:
       pg:
         specifier: ^8.14.1
         version: 8.21.0
+      zod:
+        specifier: ^3.24.2
+        version: 3.25.76
     devDependencies:
       '@types/pg':
         specifier: ^8.11.11
