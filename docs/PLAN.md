@@ -215,9 +215,39 @@ See [IMPACT.md](./IMPACT.md).
 
 See [PLAN_VERIFY.md](./PLAN_VERIFY.md).
 
-**Acceptance:** implemented locally; pending CI green + GitHub review (not accepted yet).
+**Acceptance:** ✅ accepted (`48bd1b3`, CI run [#22](https://github.com/Belvist/KLM/actions/runs/26723595523) green).
 
-**Not in 2.8:** patch generation, autonomous file edits.
+**Not in 2.8:** patch generation, autonomous file edits, formal proof (v1 is rule-based heuristic).
+
+---
+
+## Phase 2.9 — Code Verification Hardening (planned)
+
+**code/diff/architecture → verify** against impact report, plan report, invariants, tenant/security rules, missing tests.
+
+| #   | Задача                                                                 | Статус |
+| --- | ---------------------------------------------------------------------- | ------ |
+| 1   | `@klm/code-verifier` (or harden existing) — structured verdict           | ⏳     |
+| 2   | Cross-check vs impact + plan reports (when provided)                   | ⏳     |
+| 3   | `klm_verify_code` MCP + API parity with plan verifier safety           | ⏳     |
+| 4   | E2E: pass / needs_changes / blocked, 403, no secret echo, no writes    | ⏳     |
+
+**Target output:**
+
+```json
+{
+  "verdict": "pass" | "needs_changes" | "blocked",
+  "violations": [],
+  "missingTests": [],
+  "securityRisks": [],
+  "scopeDrift": [],
+  "confidence": "medium"
+}
+```
+
+**Not in 2.9:** patch generation, autonomous edits, PR workflow.
+
+**Prerequisite for Phase 3/4:** controlled patch proposal only after code verifier reaches plan-verifier parity.
 
 ---
 

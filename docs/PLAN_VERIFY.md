@@ -1,6 +1,8 @@
-# Plan Verification (Phase 2.8)
+# Plan Verification (Phase 2.8) — ✅ accepted
 
 Read-only: **task + implementation plan → impact report → verdict** against invariants, scope, and tests.
+
+**Accepted:** `48bd1b3`, CI [#22](https://github.com/Belvist/KLM/actions/runs/26723595523) green (2026-05-31).
 
 **v1 = deterministic heuristic verifier, not formal proof.**
 
