@@ -18,13 +18,14 @@ export function filterSafeImpactPaths<T extends { path?: string; filePath?: stri
   });
 }
 
-/** Response must not contain raw code bodies or indexed content markers. */
+/** Response must not echo raw task text or indexed content markers. */
 export function responseExcludesSensitiveContent(
   json: string,
   forbiddenMarkers: string[]
 ): boolean {
   const lower = json.toLowerCase();
   if (lower.includes('"content"') || lower.includes('"contenthash"')) return false;
+  if (/"task"\s*:/.test(json)) return false;
   for (const marker of forbiddenMarkers) {
     if (json.includes(marker)) return false;
   }

@@ -16,6 +16,7 @@ import { DEMO_IDS, LIVE_IDS, record, tenantHeaders } from "./helpers.js";
 
 const SECRET_FIXTURE_PATHS = [".env", ".npmrc", "private.pem", "id_rsa", "dist/leak.ts"] as const;
 const CONTENT_LEAK_MARKER = "KLM_IMPACT_E2E_SECRET_BODY_MARKER_XYZ789";
+const TASK_SECRET_MARKER = "sk-impact-secret-123";
 
 function repoRoot(): string {
   return join(dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
@@ -245,6 +246,31 @@ export async function runImpactAnalysisE2e(pool: pg.Pool, results: EvalResult[])
     "impact-e2e-no-file-content",
     responseExcludesSensitiveContent(reportJson, [CONTENT_LEAK_MARKER]),
     "no content keys or secret body marker"
+  );
+
+  const secretTaskRes = await app.inject({
+    method: "POST",
+    url: `/v1/projects/${projectId}/impact/analyze`,
+    headers: tenantHeaders(),
+    payload: { task: `queue panel drag ${TASK_SECRET_MARKER}` },
+  });
+  const secretTaskJson = secretTaskRes.body;
+  const secretTaskReport = secretTaskRes.json() as {
+    task?: string;
+    taskPreview?: string;
+    taskHash?: string;
+  };
+  record(
+    results,
+    "impact-e2e-task-secret-not-echoed",
+    secretTaskRes.statusCode === 200 &&
+      !secretTaskJson.includes(TASK_SECRET_MARKER) &&
+      !("task" in secretTaskReport) &&
+      typeof secretTaskReport.taskHash === "string" &&
+      secretTaskReport.taskHash.length === 64 &&
+      typeof secretTaskReport.taskPreview === "string" &&
+      !secretTaskReport.taskPreview.includes(TASK_SECRET_MARKER),
+    `raw task absent, hash=${secretTaskReport.taskHash?.slice(0, 8)}…`
   );
 
   const paths = collectPaths(report);

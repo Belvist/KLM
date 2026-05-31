@@ -186,17 +186,17 @@ See [PROJECTS.md](./PROJECTS.md).
 
 Read-only structured impact report before code changes.
 
-| #   | Задача                                          | Статус |
-| --- | ----------------------------------------------- | ------ |
-| 1   | `@klm/impact-analyzer` core (metadata-only)     | ✅     |
-| 2   | `POST /v1/projects/:projectId/impact/analyze`   | ✅     |
-| 3   | MCP `klm_analyze_impact` (no projectId in args) | ✅     |
-| 4   | E2e: hits, 403, limit, empty task, no content   | ✅     |
-| 5   | P0: read-only, tenant-safe, fail-soft           | ✅     |
+| #   | Задача                                                        | Статус |
+| --- | ------------------------------------------------------------- | ------ |
+| 1   | `@klm/impact-analyzer` core (metadata-only)                   | ✅     |
+| 2   | `POST /v1/projects/:projectId/impact/analyze`                 | ✅     |
+| 3   | MCP `klm_analyze_impact` (no projectId in args)               | ✅     |
+| 4   | E2e: hits, 403, limit, empty task, no content, task redaction | ✅     |
+| 5   | P0: read-only, tenant-safe, fail-soft                         | ✅     |
 
 See [IMPACT.md](./IMPACT.md).
 
-**Acceptance:** pending P0 gate + CI green (hold commit/push).
+**Acceptance:** pushed (`28a1eac`); pending CI green + task-redaction fix review.
 
 **Not in 2.7:** patch generation, autonomous edits, chat capture, LLM reasoning (v1 is rule-based/deterministic).
 

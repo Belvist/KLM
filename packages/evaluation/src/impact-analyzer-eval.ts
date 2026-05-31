@@ -1,6 +1,17 @@
 import { extractImpactSearchTerms, matchScore } from "@klm/impact-analyzer";
 import { parseQueryLimit } from "@klm/codebase-indexer";
+import { sanitizeImpactTaskPreview } from "@klm/core";
 import type { EvalResult } from "./scenarios.js";
+
+export function evalImpactTaskRedaction(): EvalResult {
+  const preview = sanitizeImpactTaskPreview("queue panel drag sk-impact-secret-123");
+  const passed = !preview.includes("sk-impact-secret-123") && preview.includes("[redacted]");
+  return {
+    name: "impact-task-redaction",
+    passed,
+    message: preview,
+  };
+}
 
 export function evalImpactLimitCap(): EvalResult {
   const capped = parseQueryLimit("5000");
@@ -35,5 +46,10 @@ export function evalImpactMatchScore(): EvalResult {
 }
 
 export async function runImpactAnalyzerEvals(): Promise<EvalResult[]> {
-  return [evalImpactTermExtraction(), evalImpactMatchScore(), evalImpactLimitCap()];
+  return [
+    evalImpactTermExtraction(),
+    evalImpactMatchScore(),
+    evalImpactLimitCap(),
+    evalImpactTaskRedaction(),
+  ];
 }

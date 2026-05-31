@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { hashImpactTask, sanitizeImpactTaskPreview } from "../impact-task.js";
 
 export const TaskTypeSchema = z.enum([
   "code",
@@ -226,7 +227,8 @@ export const ImpactSuggestedTestSchema = z.object({
 });
 
 export const ImpactAnalysisReportSchema = z.object({
-  task: z.string(),
+  taskPreview: z.string(),
+  taskHash: z.string(),
   searchTerms: z.array(z.string()),
   affectedFiles: z.array(ImpactAffectedFileSchema),
   affectedRoutes: z.array(ImpactAffectedRouteSchema),
@@ -244,9 +246,10 @@ export type ImpactAnalysisReport = z.infer<typeof ImpactAnalysisReportSchema>;
 export const MAX_IMPACT_ITEMS = 100;
 export const MAX_IMPACT_TEXT_LENGTH = 240;
 
-export function emptyImpactReport(task = ""): ImpactAnalysisReport {
-  return {
-    task: task.slice(0, MAX_IMPACT_TEXT_LENGTH),
+export type ImpactAnalysisBody = Omit<ImpactAnalysisReport, "taskPreview" | "taskHash">;
+
+export function emptyImpactReport(rawTask = ""): ImpactAnalysisReport {
+  return publicImpactAnalysisReport(rawTask, {
     searchTerms: [],
     affectedFiles: [],
     affectedRoutes: [],
@@ -257,19 +260,21 @@ export function emptyImpactReport(task = ""): ImpactAnalysisReport {
     suggestedTests: [],
     confidence: "low",
     metadataOnly: true,
-  };
+  });
 }
 
-/** API/MCP-safe view — bounded arrays and text, metadata paths only. */
+/** API/MCP-safe view — bounded arrays and text, metadata paths only; no raw task echo. */
 export function publicImpactAnalysisReport(
-  report: ImpactAnalysisReport,
+  rawTask: string,
+  report: ImpactAnalysisBody,
   limit = MAX_IMPACT_ITEMS
 ): ImpactAnalysisReport {
   const cap = Math.min(Math.max(1, limit), MAX_IMPACT_ITEMS);
   const trim = (s: string) => s.trim().slice(0, MAX_IMPACT_TEXT_LENGTH);
 
   return {
-    task: trim(report.task),
+    taskPreview: sanitizeImpactTaskPreview(rawTask),
+    taskHash: hashImpactTask(rawTask),
     searchTerms: report.searchTerms.slice(0, 20),
     affectedFiles: report.affectedFiles.slice(0, cap),
     affectedRoutes: report.affectedRoutes.slice(0, cap),

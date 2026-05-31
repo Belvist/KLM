@@ -6,7 +6,8 @@ Read-only layer: **task → structured impact report**. No file edits, no memory
 
 ```json
 {
-  "task": "queue panel drag gesture",
+  "taskPreview": "queue panel drag gesture",
+  "taskHash": "<sha256 hex>",
   "searchTerms": ["queue", "panel", "drag", "gesture"],
   "affectedFiles": [{ "path": "frontend/.../QueuePanel.tsx", "score": 0.75 }],
   "affectedRoutes": [],
@@ -27,6 +28,7 @@ Read-only layer: **task → structured impact report**. No file edits, no memory
 | Read-only                | No store writes, no file I/O                                            |
 | Tenant-safe              | `projectId` from header/resolver only                                   |
 | Metadata-only            | Paths, routes, symbols — never file content                             |
+| No raw task echo         | `taskPreview` (redacted) + `taskHash` only — never raw `task` in output |
 | Limit cap                | Max **100 per section** (files, routes, symbols, invariants, decisions) |
 | Fail-soft                | Empty task → low confidence, no crash                                   |
 | Memory from ProjectState | Invariants/decisions scored from DB, not hallucinated                   |

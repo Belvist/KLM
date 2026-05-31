@@ -1,11 +1,12 @@
 import type {
   DecisionNode,
+  ImpactAnalysisBody,
   ImpactAnalysisReport,
   ImpactConfidence,
   Invariant,
   RiskNode,
 } from "@klm/core";
-import { emptyImpactReport, MAX_IMPACT_ITEMS, publicImpactAnalysisReport } from "@klm/core";
+import { MAX_IMPACT_ITEMS, publicImpactAnalysisReport } from "@klm/core";
 import type {
   CodebaseQueryReader,
   CodeFileRow,
@@ -253,18 +254,48 @@ export class ImpactAnalyzer {
     );
 
     if (!task) {
-      return publicImpactAnalysisReport(emptyImpactReport(""), limit);
+      return publicImpactAnalysisReport(
+        "",
+        {
+          searchTerms: [],
+          affectedFiles: [],
+          affectedRoutes: [],
+          affectedSymbols: [],
+          relatedInvariants: [],
+          relatedDecisions: [],
+          risks: [],
+          suggestedTests: [],
+          confidence: "low",
+          metadataOnly: true,
+        },
+        limit
+      );
     }
 
     const terms = extractImpactSearchTerms(task);
     if (!terms.length) {
-      const report = emptyImpactReport(task);
-      report.risks.push({
-        message: "Could not extract searchable terms from task",
-        severity: "low",
-        source: "coverage",
-      });
-      return publicImpactAnalysisReport(report, limit);
+      return publicImpactAnalysisReport(
+        task,
+        {
+          searchTerms: [],
+          affectedFiles: [],
+          affectedRoutes: [],
+          affectedSymbols: [],
+          relatedInvariants: [],
+          relatedDecisions: [],
+          risks: [
+            {
+              message: "Could not extract searchable terms from task",
+              severity: "low",
+              source: "coverage",
+            },
+          ],
+          suggestedTests: [],
+          confidence: "low",
+          metadataOnly: true,
+        },
+        limit
+      );
     }
 
     const [search, invariants, decisions, risks] = await Promise.all([
@@ -282,8 +313,7 @@ export class ImpactAnalyzer {
 
     const codebaseHitCount = affectedFiles.length + affectedRoutes.length + affectedSymbols.length;
 
-    const report: ImpactAnalysisReport = {
-      task,
+    const report: ImpactAnalysisBody = {
       searchTerms: terms,
       affectedFiles,
       affectedRoutes,
@@ -308,6 +338,6 @@ export class ImpactAnalyzer {
       metadataOnly: true,
     };
 
-    return publicImpactAnalysisReport(report, limit);
+    return publicImpactAnalysisReport(task, report, limit);
   }
 }
