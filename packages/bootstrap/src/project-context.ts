@@ -91,7 +91,11 @@ export async function resolveProjectContext(
 }
 
 /** Dev helper: pin an existing UUID to a repo (e.g. migrate music-platform). */
-export function pinProjectId(workspaceRoot: string, projectId: string, name?: string): KlmProjectManifest {
+export function pinProjectId(
+  workspaceRoot: string,
+  projectId: string,
+  name?: string
+): KlmProjectManifest {
   const root = resolve(workspaceRoot);
   const existing = readManifest(root);
   const manifest: KlmProjectManifest = {
@@ -100,8 +104,14 @@ export function pinProjectId(workspaceRoot: string, projectId: string, name?: st
     rootPath: root,
     rootFingerprint: existing?.rootFingerprint ?? `pinned:${projectId}`,
     createdAt: existing?.createdAt ?? new Date().toISOString(),
-    organizationId: existing?.organizationId ?? process.env.KLM_ORGANIZATION_ID ?? "00000000-0000-4000-8000-000000000001",
-    workspaceId: existing?.workspaceId ?? process.env.KLM_WORKSPACE_ID ?? "00000000-0000-4000-8000-000000000002",
+    organizationId:
+      existing?.organizationId ??
+      process.env.KLM_ORGANIZATION_ID ??
+      "00000000-0000-4000-8000-000000000001",
+    workspaceId:
+      existing?.workspaceId ??
+      process.env.KLM_WORKSPACE_ID ??
+      "00000000-0000-4000-8000-000000000002",
     userId: existing?.userId ?? process.env.KLM_USER_ID ?? "00000000-0000-4000-8000-000000000004",
   };
   writeManifest(root, manifest);

@@ -6,10 +6,10 @@ KLM resolves **project identity** for **CLI and MCP** from the workspace — no 
 
 ## Data model
 
-| Store | Role |
-|-------|------|
-| `projects` | Identity registry: stable UUID ↔ fingerprint (git remote or path hash) |
-| `project_states` | Memory/state: invariants, decisions, goals, codebase map |
+| Store            | Role                                                                   |
+| ---------------- | ---------------------------------------------------------------------- |
+| `projects`       | Identity registry: stable UUID ↔ fingerprint (git remote or path hash) |
+| `project_states` | Memory/state: invariants, decisions, goals, codebase map               |
 
 `klm:init` creates/updates **both** — manifest, `projects` row, and empty `project_states` shell.
 
@@ -54,11 +54,11 @@ Only succeeds if fingerprint matches Postgres row, or use `--force` intentionall
 
 ## Resolution priority
 
-| Context | Order |
-|---------|-------|
-| **API** | `X-KLM-Project-Id` only (explicit header) |
+| Context | Order                                                                                        |
+| ------- | -------------------------------------------------------------------------------------------- |
+| **API** | `X-KLM-Project-Id` only (explicit header)                                                    |
 | **MCP** | `KLM_WORKSPACE_ROOT` → manifest at that root (walk up if set) → `KLM_PROJECT_ID` env → error |
-| **CLI** | `--project-id` → `<root>/.klm/project.json` → `PROJECT_NOT_INITIALIZED` |
+| **CLI** | `--project-id` → `<root>/.klm/project.json` → `PROJECT_NOT_INITIALIZED`                      |
 
 **P0:** index/import/MCP never silently create a project. Only `klm:init` registers identity.
 
@@ -82,12 +82,12 @@ No git remote → `path:<sha256(normalized-absolute-path)>`.
 
 ## Identity errors (fail closed)
 
-| Code | When |
-|------|------|
-| `PROJECT_NOT_INITIALIZED` | No manifest; index/import/MCP without init |
-| `PROJECT_FINGERPRINT_MISMATCH` | Manifest fingerprint ≠ current (git remote/path changed) |
-| `PROJECT_IDENTITY_CONFLICT` | `--project-id` bound to different fingerprint in Postgres |
-| `MCP_WORKSPACE_ROOT_REQUIRED` | MCP cwd has no manifest and no env fallback |
+| Code                           | When                                                      |
+| ------------------------------ | --------------------------------------------------------- |
+| `PROJECT_NOT_INITIALIZED`      | No manifest; index/import/MCP without init                |
+| `PROJECT_FINGERPRINT_MISMATCH` | Manifest fingerprint ≠ current (git remote/path changed)  |
+| `PROJECT_IDENTITY_CONFLICT`    | `--project-id` bound to different fingerprint in Postgres |
+| `MCP_WORKSPACE_ROOT_REQUIRED`  | MCP cwd has no manifest and no env fallback               |
 
 Recovery:
 
@@ -98,12 +98,12 @@ pnpm klm:init -- --root . --project-id <uuid> --force   # explicit rebind
 
 ## Commands
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm klm:init -- --root <path>` | Register project, write manifest + MCP config |
-| `pnpm klm:project -- --root <path>` | Show id, fingerprint, stats |
-| `pnpm index:codebase -- --root <path>` | Index (reads manifest) |
-| `pnpm klm:import-docs -- --root <path>` | Import docs memory |
+| Command                                 | Purpose                                       |
+| --------------------------------------- | --------------------------------------------- |
+| `pnpm klm:init -- --root <path>`        | Register project, write manifest + MCP config |
+| `pnpm klm:project -- --root <path>`     | Show id, fingerprint, stats                   |
+| `pnpm index:codebase -- --root <path>`  | Index (reads manifest)                        |
+| `pnpm klm:import-docs -- --root <path>` | Import docs memory                            |
 
 ## Package
 

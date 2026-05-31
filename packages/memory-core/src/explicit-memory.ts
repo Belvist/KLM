@@ -39,10 +39,16 @@ export function parseExplicitMemory(input: string): ExplicitMemoryPayload {
     try {
       const parsed = JSON.parse(fence[1]) as {
         decisions?: Array<{ decision: string; reason?: string[]; severity?: string }>;
-        invariants?: Array<{ rule: string; reason?: string; severity?: string; appliesTo?: string[] }>;
+        invariants?: Array<{
+          rule: string;
+          reason?: string;
+          severity?: string;
+          appliesTo?: string[];
+        }>;
       };
       for (const d of parsed.decisions ?? []) {
-        if (d.decision?.trim()) decisions.push({ decision: d.decision.trim(), reason: d.reason ?? [] });
+        if (d.decision?.trim())
+          decisions.push({ decision: d.decision.trim(), reason: d.reason ?? [] });
       }
       for (const inv of parsed.invariants ?? []) {
         if (inv.rule?.trim()) {

@@ -25,7 +25,11 @@ export {
   newRequestId,
   manifestPath,
 } from "./project-context.js";
-export type { KlmProjectManifest, ResolvedProjectContext, ResolveProjectOptions } from "./project-context.js";
+export type {
+  KlmProjectManifest,
+  ResolvedProjectContext,
+  ResolveProjectOptions,
+} from "./project-context.js";
 
 export interface KlmApp {
   store: StateStore;

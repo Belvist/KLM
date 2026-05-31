@@ -31,10 +31,7 @@ export function resolveMcpRootContext(cwd: string = process.cwd()): McpRootConte
 }
 
 /** Pre-flight: fail fast when MCP would bind to wrong project. */
-export function assertMcpResolvable(
-  ctx: McpRootContext,
-  envProjectId?: string
-): void {
+export function assertMcpResolvable(ctx: McpRootContext, envProjectId?: string): void {
   if (envProjectId) return;
 
   const manifest = readManifest(ctx.workspaceRoot);

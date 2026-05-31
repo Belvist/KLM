@@ -56,7 +56,9 @@ function loadEnvKey(envPath, key) {
   return "";
 }
 
-const { workspaceRoot, projectId, klmRuntimeRoot, repair, force } = parseArgs(process.argv.slice(2));
+const { workspaceRoot, projectId, klmRuntimeRoot, repair, force } = parseArgs(
+  process.argv.slice(2)
+);
 
 if (!existsSync(workspaceRoot)) {
   console.error(`Workspace not found: ${workspaceRoot}`);
@@ -66,8 +68,10 @@ if (!existsSync(workspaceRoot)) {
 const envPath = join(klmRuntimeRoot, ".env");
 for (const [key, val] of Object.entries({
   DATABASE_URL: loadEnvKey(envPath, "DATABASE_URL"),
-  KLM_ORGANIZATION_ID: loadEnvKey(envPath, "KLM_ORGANIZATION_ID") || "00000000-0000-4000-8000-000000000001",
-  KLM_WORKSPACE_ID: loadEnvKey(envPath, "KLM_WORKSPACE_ID") || "00000000-0000-4000-8000-000000000002",
+  KLM_ORGANIZATION_ID:
+    loadEnvKey(envPath, "KLM_ORGANIZATION_ID") || "00000000-0000-4000-8000-000000000001",
+  KLM_WORKSPACE_ID:
+    loadEnvKey(envPath, "KLM_WORKSPACE_ID") || "00000000-0000-4000-8000-000000000002",
   KLM_USER_ID: loadEnvKey(envPath, "KLM_USER_ID") || "00000000-0000-4000-8000-000000000004",
 })) {
   if (val && !process.env[key]) process.env[key] = val;

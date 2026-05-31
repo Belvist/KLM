@@ -2,10 +2,7 @@ export class ProjectNotInitializedError extends Error {
   readonly code = "PROJECT_NOT_INITIALIZED" as const;
 
   constructor(root: string, hint?: string) {
-    super(
-      hint ??
-        `KLM project not initialized at ${root}. Run: pnpm klm:init -- --root "${root}"`
-    );
+    super(hint ?? `KLM project not initialized at ${root}. Run: pnpm klm:init -- --root "${root}"`);
     this.name = "ProjectNotInitializedError";
   }
 }
@@ -27,11 +24,7 @@ export class ProjectFingerprintMismatchError extends Error {
 export class ProjectIdentityConflictError extends Error {
   readonly code = "PROJECT_IDENTITY_CONFLICT" as const;
 
-  constructor(
-    projectId: string,
-    existingFingerprint: string,
-    requestedFingerprint: string
-  ) {
+  constructor(projectId: string, existingFingerprint: string, requestedFingerprint: string) {
     super(
       `Project ${projectId} is registered with fingerprint ${existingFingerprint}, ` +
         `cannot bind to ${requestedFingerprint}. Use --force only if intentional.`

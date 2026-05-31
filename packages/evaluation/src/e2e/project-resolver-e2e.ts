@@ -51,10 +51,9 @@ export async function runProjectResolverE2e(pool: pg.Pool, results: EvalResult[]
       `klm entries=${countGitignoreKlmEntries(gitignore)}`
     );
 
-    const row = await pool.query(
-      `SELECT id, root_fingerprint FROM projects WHERE id = $1`,
-      [init1.manifest.projectId]
-    );
+    const row = await pool.query(`SELECT id, root_fingerprint FROM projects WHERE id = $1`, [
+      init1.manifest.projectId,
+    ]);
     record(
       results,
       "resolver-e2e-projects-row",
@@ -92,7 +91,12 @@ export async function runProjectResolverE2e(pool: pg.Pool, results: EvalResult[]
     } catch (err) {
       mismatchErr = err instanceof ProjectFingerprintMismatchError;
     }
-    record(results, "resolver-e2e-fingerprint-mismatch", mismatchErr, "PROJECT_FINGERPRINT_MISMATCH");
+    record(
+      results,
+      "resolver-e2e-fingerprint-mismatch",
+      mismatchErr,
+      "PROJECT_FINGERPRINT_MISMATCH"
+    );
 
     writeFileSync(join(dir, ".klm", "project.json"), `${JSON.stringify(manifest)}\n`);
 

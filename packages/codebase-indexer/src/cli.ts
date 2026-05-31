@@ -1,10 +1,7 @@
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { existsSync, readFileSync } from "node:fs";
-import {
-  ProjectNotInitializedError,
-  resolveProjectIdForRoot,
-} from "@klm/project-resolver";
+import { ProjectNotInitializedError, resolveProjectIdForRoot } from "@klm/project-resolver";
 import { CodebaseIndexer } from "./indexer.js";
 
 function loadRootEnv(): void {

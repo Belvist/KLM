@@ -5,7 +5,16 @@ import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 const require = createRequire(import.meta.url);
-const pg = require(join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "state-store", "node_modules", "pg"));
+const pg = require(
+  join(
+    dirname(fileURLToPath(import.meta.url)),
+    "..",
+    "packages",
+    "state-store",
+    "node_modules",
+    "pg"
+  )
+);
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const klmRoot = join(__dirname, "..");

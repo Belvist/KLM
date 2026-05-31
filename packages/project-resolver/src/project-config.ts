@@ -65,11 +65,7 @@ export function ensureGitignoreKlm(root: string): { created: boolean; appended: 
   const entry = ".klm/";
 
   if (!existsSync(gitignorePath)) {
-    writeFileSync(
-      gitignorePath,
-      `# KLM local project identity (dev)\n${entry}\n`,
-      "utf-8"
-    );
+    writeFileSync(gitignorePath, `# KLM local project identity (dev)\n${entry}\n`, "utf-8");
     return { created: true, appended: false };
   }
 

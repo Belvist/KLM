@@ -28,12 +28,20 @@ function inferAppliesTo(id: string, area?: string): string[] {
   if (id.startsWith("INV-SEC")) tags.push("security");
   if (id.startsWith("INV-BE")) tags.push("backend");
   if (id.startsWith("INV-GW")) tags.push("gateway");
-  if (area) tags.push(...area.split(/[|,]/).map((s) => s.trim()).filter(Boolean));
+  if (area)
+    tags.push(
+      ...area
+        .split(/[|,]/)
+        .map((s) => s.trim())
+        .filter(Boolean)
+    );
   return [...new Set(tags)];
 }
 
 /** Parse Earflow-style ARCHITECTURE_INVARIANTS.md */
-export function parseArchitectureInvariantsMarkdown(content: string): ParsedProjectDocs["invariants"] {
+export function parseArchitectureInvariantsMarkdown(
+  content: string
+): ParsedProjectDocs["invariants"] {
   const invariants: ParsedProjectDocs["invariants"] = [];
   const sections = content.split(/^### /m).slice(1);
 
@@ -80,11 +88,21 @@ export function parseDecisionsMarkdown(content: string): ParsedProjectDocs["deci
     const decisionTitle = dateMatch ? `${dateMatch[1]} — ${dateMatch[2]}` : titleLine;
 
     const areaMatch = body.match(/\*\*Area:\*\*\s*(.+)/);
-    const decisionMatch = body.match(/\*\*Decision:\*\*\s*([\s\S]*?)(?=\n\*\*Alternatives|\n\*\*Consequences|\n\*\*Files|\n---|\n## |$)/);
-    const contextMatch = body.match(/\*\*Context:\*\*\s*([\s\S]*?)(?=\n\*\*Decision:|\n\*\*Alternatives|\n\*\*Consequences|$)/);
-    const alternativesMatch = body.match(/\*\*Alternatives considered:\*\*\s*([\s\S]*?)(?=\n\*\*Consequences|\n\*\*Files|\n---|\n## |$)/);
-    const consequencesMatch = body.match(/\*\*Consequences:\*\*\s*([\s\S]*?)(?=\n\*\*Files|\n\*\*Tests|\n---|\n## |$)/);
-    const filesMatch = body.match(/\*\*Files touched:\*\*\s*([\s\S]*?)(?=\n\*\*Tests|\n\*\*Чтобы|\n---|\n## |$)/);
+    const decisionMatch = body.match(
+      /\*\*Decision:\*\*\s*([\s\S]*?)(?=\n\*\*Alternatives|\n\*\*Consequences|\n\*\*Files|\n---|\n## |$)/
+    );
+    const contextMatch = body.match(
+      /\*\*Context:\*\*\s*([\s\S]*?)(?=\n\*\*Decision:|\n\*\*Alternatives|\n\*\*Consequences|$)/
+    );
+    const alternativesMatch = body.match(
+      /\*\*Alternatives considered:\*\*\s*([\s\S]*?)(?=\n\*\*Consequences|\n\*\*Files|\n---|\n## |$)/
+    );
+    const consequencesMatch = body.match(
+      /\*\*Consequences:\*\*\s*([\s\S]*?)(?=\n\*\*Files|\n\*\*Tests|\n---|\n## |$)/
+    );
+    const filesMatch = body.match(
+      /\*\*Files touched:\*\*\s*([\s\S]*?)(?=\n\*\*Tests|\n\*\*Чтобы|\n---|\n## |$)/
+    );
 
     const reason: string[] = [];
     if (contextMatch?.[1]?.trim()) reason.push(contextMatch[1].trim().slice(0, 500));
@@ -108,7 +126,12 @@ export function parseDecisionsMarkdown(content: string): ParsedProjectDocs["deci
     const linkedFiles =
       filesMatch?.[1]
         ?.split("\n")
-        .map((l) => l.replace(/^[-*`\s]+/, "").replace(/`/g, "").trim())
+        .map((l) =>
+          l
+            .replace(/^[-*`\s]+/, "")
+            .replace(/`/g, "")
+            .trim()
+        )
         .filter((l) => l.includes("/") || l.includes("\\")) ?? [];
 
     const area = areaMatch?.[1]?.trim() ?? "";

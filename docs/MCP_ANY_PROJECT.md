@@ -101,11 +101,11 @@ KLM_RUNTIME_ROOT=<path to klm-runtime>
 
 ## Troubleshooting
 
-| Симптом | Решение |
-|---------|---------|
-| `no_hits` / пустой codebase | Переиндекс + тот же project-id что в `.klm/project.json` |
-| Память «чужая» | Открыт не тот workspace root / другой `.klm/project.json` |
-| MCP красный | Docker, `pnpm install`, путь `KLM_RUNTIME_ROOT` в mcp.json |
-| Агент не зовёт KLM | Agent mode, Reload MCP, rule `klm-auto-memory.mdc` |
+| Симптом                     | Решение                                                    |
+| --------------------------- | ---------------------------------------------------------- |
+| `no_hits` / пустой codebase | Переиндекс + тот же project-id что в `.klm/project.json`   |
+| Память «чужая»              | Открыт не тот workspace root / другой `.klm/project.json`  |
+| MCP красный                 | Docker, `pnpm install`, путь `KLM_RUNTIME_ROOT` в mcp.json |
+| Агент не зовёт KLM          | Agent mode, Reload MCP, rule `klm-auto-memory.mdc`         |
 
 См. также [VALUE.md](./VALUE.md) — зачем это нужно.

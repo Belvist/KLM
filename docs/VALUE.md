@@ -43,12 +43,12 @@ PostgreSQL (один store для API + MCP)
 
 ### Что «не забывается»
 
-| Память | Где | Кто пишет |
-|--------|-----|-----------|
-| Архитектурные законы | `invariants` | seed + `klm_analyze_task` |
-| Принятые решения | `decisions` | memory pipeline после работы |
-| История задач | `events` | каждый request |
-| Карта кода | `code_routes`, `code_symbols` | `pnpm index:codebase` |
+| Память               | Где                           | Кто пишет                    |
+| -------------------- | ----------------------------- | ---------------------------- |
+| Архитектурные законы | `invariants`                  | seed + `klm_analyze_task`    |
+| Принятые решения     | `decisions`                   | memory pipeline после работы |
+| История задач        | `events`                      | каждый request               |
+| Карта кода           | `code_routes`, `code_symbols` | `pnpm index:codebase`        |
 
 **Модель не хранит память сама** — KLM **подкладывает** её в каждый reasoning loop.
 
@@ -56,13 +56,13 @@ PostgreSQL (один store для API + MCP)
 
 ## Что ты делаешь руками vs автоматом
 
-| Действие | Как часто |
-|----------|-----------|
-| `pnpm klm:init <repo>` | один раз на репозиторий |
-| `pnpm index:codebase` | после изменений кода |
-| `docker up`, `db:migrate` | инфра, редко |
-| Reload MCP в Cursor | после смены конфига |
-| Писать в чат | каждый день |
+| Действие                  | Как часто               |
+| ------------------------- | ----------------------- |
+| `pnpm klm:init <repo>`    | один раз на репозиторий |
+| `pnpm index:codebase`     | после изменений кода    |
+| `docker up`, `db:migrate` | инфра, редко            |
+| Reload MCP в Cursor       | после смены конфига     |
+| Писать в чат              | каждый день             |
 
 **Не нужно** каждый раз вставлять дерево файлов, routes, прошлые решения — агент вызывает `klm_get_project_memory` + activation подставляет контекст.
 

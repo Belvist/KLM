@@ -8,11 +8,11 @@ See also [MEMORY_VISION.md](./MEMORY_VISION.md) — what «infinite memory» mea
 
 ## Project IDs (isolated — Phase 2.6.2)
 
-| Project | UUID | Use |
-|---------|------|-----|
-| KLM Runtime demo | `...000003` | e2e, evals |
-| KLM Runtime live | `...000005` | developing KLM itself (`pnpm use:klm`) |
-| **music-platform** | `...000105` | Earflow — **never mix with KLM seed** |
+| Project            | UUID        | Use                                    |
+| ------------------ | ----------- | -------------------------------------- |
+| KLM Runtime demo   | `...000003` | e2e, evals                             |
+| KLM Runtime live   | `...000005` | developing KLM itself (`pnpm use:klm`) |
+| **music-platform** | `...000105` | Earflow — **never mix with KLM seed**  |
 
 ```powershell
 pnpm use:klm      # KLM_PROJECT_ID=...000003
@@ -30,12 +30,12 @@ pnpm setup:music
 
 ## What KLM stores vs what you type
 
-| Data | Who writes it | When |
-|------|---------------|------|
-| **Code index** | `pnpm index:music` | After code changes |
-| **Structured memory** | `pnpm klm:import-docs` | After docs changes |
-| **Events** | `klm_analyze_task` / API chat | When agent/API runs KLM loop |
-| **Activation** | automatic on request | if `KLM_CODEBASE_ACTIVATION=true` |
+| Data                  | Who writes it                 | When                              |
+| --------------------- | ----------------------------- | --------------------------------- |
+| **Code index**        | `pnpm index:music`            | After code changes                |
+| **Structured memory** | `pnpm klm:import-docs`        | After docs changes                |
+| **Events**            | `klm_analyze_task` / API chat | When agent/API runs KLM loop      |
+| **Activation**        | automatic on request          | if `KLM_CODEBASE_ACTIVATION=true` |
 
 KLM does **not** auto-watch git or Cursor chats — see MEMORY_VISION.md.
 
@@ -89,14 +89,14 @@ klm_analyze_task: "Record to project memory: ..."
 
 ## Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm use:music` / `pnpm use:klm` | Switch active project profile |
-| `pnpm setup:music` | Full isolated music-platform bootstrap |
-| `pnpm klm:import-docs` | DECISIONS + ARCHITECTURE_INVARIANTS → Postgres |
-| `pnpm index:music` | Codebase index |
-| `pnpm smoke:music` | Activation smoke |
-| `pnpm smoke:isolation` | No KLM platform seed in music project |
+| Command                           | Purpose                                        |
+| --------------------------------- | ---------------------------------------------- |
+| `pnpm use:music` / `pnpm use:klm` | Switch active project profile                  |
+| `pnpm setup:music`                | Full isolated music-platform bootstrap         |
+| `pnpm klm:import-docs`            | DECISIONS + ARCHITECTURE_INVARIANTS → Postgres |
+| `pnpm index:music`                | Codebase index                                 |
+| `pnpm smoke:music`                | Activation smoke                               |
+| `pnpm smoke:isolation`            | No KLM platform seed in music project          |
 
 ---
 

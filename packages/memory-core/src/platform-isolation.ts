@@ -30,8 +30,6 @@ export function findPlatformMemoryLeaks(state: {
   return leaks;
 }
 
-export function hasEarflowMemory(state: {
-  invariants?: Array<{ rule: string }>;
-}): boolean {
+export function hasEarflowMemory(state: { invariants?: Array<{ rule: string }> }): boolean {
   return (state.invariants ?? []).some((i) => /INV-FE-\d+/i.test(i.rule));
 }

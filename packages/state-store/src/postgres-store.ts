@@ -8,11 +8,7 @@ import type {
   ProjectState,
   UserState,
 } from "@klm/core";
-import {
-  EventSchema,
-  ProjectStateSchema,
-  UserStateSchema,
-} from "@klm/core";
+import { EventSchema, ProjectStateSchema, UserStateSchema } from "@klm/core";
 import type { StateStore } from "./in-memory-store.js";
 import { emptyProjectState } from "./in-memory-store.js";
 import { mergeMemoryUpdate } from "./merge-memory-update.js";

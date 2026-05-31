@@ -8,10 +8,7 @@ import {
   ProjectNotInitializedError,
 } from "./errors.js";
 import { computeFingerprint } from "./fingerprint.js";
-import {
-  assertMcpResolvable,
-  resolveMcpRootContext,
-} from "./mcp-workspace.js";
+import { assertMcpResolvable, resolveMcpRootContext } from "./mcp-workspace.js";
 import {
   defaultProjectName,
   ensureGitignoreKlm,
@@ -42,7 +39,10 @@ export interface ResolveOptions {
   walkUp?: boolean;
 }
 
-function manifestToResolved(manifest: KlmProjectManifest, source: ResolvedProject["source"]): ResolvedProject {
+function manifestToResolved(
+  manifest: KlmProjectManifest,
+  source: ResolvedProject["source"]
+): ResolvedProject {
   const defaults = tenantDefaults();
   return {
     manifest,
@@ -69,7 +69,10 @@ function manifestFromEnv(envProjectId: string, root: string): KlmProjectManifest
   };
 }
 
-function locateManifest(startDir: string, walkUp: boolean): { root: string; manifest: KlmProjectManifest | null } {
+function locateManifest(
+  startDir: string,
+  walkUp: boolean
+): { root: string; manifest: KlmProjectManifest | null } {
   const absStart = resolve(startDir);
   const direct = readManifest(absStart);
   if (direct) return { root: absStart, manifest: direct };
@@ -188,11 +191,7 @@ function assertManifestFingerprint(
   const stored = manifest.rootFingerprint;
   if (!stored || stored === current.rootFingerprint) return;
   if (allowOverride) return;
-  throw new ProjectFingerprintMismatchError(
-    manifest.rootPath,
-    stored,
-    current.rootFingerprint
-  );
+  throw new ProjectFingerprintMismatchError(manifest.rootPath, stored, current.rootFingerprint);
 }
 
 async function assertProjectIdBinding(
@@ -204,20 +203,12 @@ async function assertProjectIdBinding(
 ): Promise<void> {
   const byId = await store.findById(projectId);
   if (byId && byId.rootFingerprint !== fp.rootFingerprint && !force) {
-    throw new ProjectIdentityConflictError(
-      projectId,
-      byId.rootFingerprint,
-      fp.rootFingerprint
-    );
+    throw new ProjectIdentityConflictError(projectId, byId.rootFingerprint, fp.rootFingerprint);
   }
 
   const byFp = await store.findByFingerprint(organizationId, fp.rootFingerprint);
   if (byFp && byFp.id !== projectId && !force) {
-    throw new ProjectIdentityConflictError(
-      byFp.id,
-      byFp.rootFingerprint,
-      fp.rootFingerprint
-    );
+    throw new ProjectIdentityConflictError(byFp.id, byFp.rootFingerprint, fp.rootFingerprint);
   }
 }
 
@@ -264,7 +255,13 @@ export async function initProject(options: InitProjectOptions): Promise<InitProj
     if (options.connectionString) {
       const store = new ProjectsStore(options.connectionString);
       try {
-        await assertProjectIdBinding(store, projectId, fp, tenant.organizationId, Boolean(options.force));
+        await assertProjectIdBinding(
+          store,
+          projectId,
+          fp,
+          tenant.organizationId,
+          Boolean(options.force)
+        );
         await store.upsert({
           id: projectId,
           workspaceId: existing.workspaceId ?? tenant.workspaceId,
@@ -326,7 +323,13 @@ export async function initProject(options: InitProjectOptions): Promise<InitProj
     const store = new ProjectsStore(options.connectionString);
     try {
       if (projectId) {
-        await assertProjectIdBinding(store, projectId, fp, tenant.organizationId, Boolean(options.force));
+        await assertProjectIdBinding(
+          store,
+          projectId,
+          fp,
+          tenant.organizationId,
+          Boolean(options.force)
+        );
       } else {
         const byFp = await store.findByFingerprint(tenant.organizationId, fp.rootFingerprint);
         projectId = byFp?.id;
