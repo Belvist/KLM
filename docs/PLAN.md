@@ -225,12 +225,12 @@ See [PLAN_VERIFY.md](./PLAN_VERIFY.md).
 
 **code/diff/architecture → verify** against impact report, plan report, invariants, tenant/security rules, missing tests.
 
-| #   | Задача                                                                 | Статус |
-| --- | ---------------------------------------------------------------------- | ------ |
-| 1   | `@klm/code-verifier` (or harden existing) — structured verdict           | ⏳     |
-| 2   | Cross-check vs impact + plan reports (when provided)                   | ⏳     |
-| 3   | `klm_verify_code` MCP + API parity with plan verifier safety           | ⏳     |
-| 4   | E2E: pass / needs_changes / blocked, 403, no secret echo, no writes    | ⏳     |
+| #   | Задача                                                              | Статус |
+| --- | ------------------------------------------------------------------- | ------ |
+| 1   | `@klm/code-verifier` (or harden existing) — structured verdict      | ⏳     |
+| 2   | Cross-check vs impact + plan reports (when provided)                | ⏳     |
+| 3   | `klm_verify_code` MCP + API parity with plan verifier safety        | ⏳     |
+| 4   | E2E: pass / needs_changes / blocked, 403, no secret echo, no writes | ⏳     |
 
 **Target output:**
 
