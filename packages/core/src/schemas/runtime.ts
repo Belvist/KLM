@@ -1,5 +1,9 @@
 import { z } from "zod";
-import { hashImpactTask, sanitizeImpactTaskPreview } from "../impact-task.js";
+import {
+  hashImpactTask,
+  hashImplementationPlan,
+  sanitizeImpactTaskPreview,
+} from "../impact-task.js";
 
 export const TaskTypeSchema = z.enum([
   "code",
@@ -293,6 +297,93 @@ export function publicImpactAnalysisReport(
       description: trim(t.description),
     })),
     confidence: report.confidence,
+    metadataOnly: true,
+  };
+}
+
+export const PlanVerdictSchema = z.enum(["safe", "needs_changes", "blocked"]);
+export type PlanVerdict = z.infer<typeof PlanVerdictSchema>;
+
+export const ImplementationPlanRouteSchema = z.object({
+  httpMethod: z.string().max(16),
+  path: z.string().max(240),
+});
+
+export const ImplementationPlanSchema = z.object({
+  steps: z.array(z.string().max(500)).min(1).max(50),
+  files: z.array(z.string().max(240)).max(100).optional(),
+  routes: z.array(ImplementationPlanRouteSchema).max(50).optional(),
+  tests: z.array(z.string().max(500)).max(50).optional(),
+});
+
+export type ImplementationPlan = z.infer<typeof ImplementationPlanSchema>;
+
+export const PlanViolationSchema = z.object({
+  rule: z.string(),
+  message: z.string(),
+  severity: z.enum(["soft", "hard", "critical"]),
+  source: z.enum(["invariant", "decision", "scope", "coverage"]),
+});
+
+export const PlanVerificationReportSchema = z.object({
+  taskPreview: z.string(),
+  taskHash: z.string(),
+  planPreview: z.string(),
+  planHash: z.string(),
+  verdict: PlanVerdictSchema,
+  violations: z.array(PlanViolationSchema),
+  missingTests: z.array(z.string()),
+  riskNotes: z.array(z.string()),
+  requiredChanges: z.array(z.string()),
+  confidence: ImpactConfidenceSchema,
+  impactConfidence: ImpactConfidenceSchema,
+  metadataOnly: z.literal(true),
+});
+
+export type PlanVerificationReport = z.infer<typeof PlanVerificationReportSchema>;
+
+export type PlanVerificationBody = Omit<
+  PlanVerificationReport,
+  "taskPreview" | "taskHash" | "planPreview" | "planHash"
+>;
+
+export const MAX_PLAN_TEXT_LENGTH = 240;
+
+export function normalizePlanForHash(plan: ImplementationPlan): string {
+  return JSON.stringify({
+    steps: plan.steps.map((s) => s.trim()),
+    files: (plan.files ?? []).map((f) => f.trim()).sort(),
+    routes: (plan.routes ?? [])
+      .map((r) => ({ httpMethod: r.httpMethod.trim().toUpperCase(), path: r.path.trim() }))
+      .sort((a, b) => `${a.httpMethod}${a.path}`.localeCompare(`${b.httpMethod}${b.path}`)),
+    tests: (plan.tests ?? []).map((t) => t.trim()).sort(),
+  });
+}
+
+export function publicPlanVerificationReport(
+  rawTask: string,
+  plan: ImplementationPlan,
+  report: PlanVerificationBody
+): PlanVerificationReport {
+  const planSummary = plan.steps.join("; ");
+  const trim = (s: string) => s.trim().slice(0, MAX_PLAN_TEXT_LENGTH);
+
+  return {
+    taskPreview: sanitizeImpactTaskPreview(rawTask),
+    taskHash: hashImpactTask(rawTask),
+    planPreview: sanitizeImpactTaskPreview(planSummary),
+    planHash: hashImplementationPlan(normalizePlanForHash(plan)),
+    verdict: report.verdict,
+    violations: report.violations.slice(0, MAX_IMPACT_ITEMS).map((v) => ({
+      ...v,
+      rule: trim(v.rule),
+      message: trim(v.message),
+    })),
+    missingTests: report.missingTests.slice(0, MAX_IMPACT_ITEMS).map(trim),
+    riskNotes: report.riskNotes.slice(0, MAX_IMPACT_ITEMS).map(trim),
+    requiredChanges: report.requiredChanges.slice(0, MAX_IMPACT_ITEMS).map(trim),
+    confidence: report.confidence,
+    impactConfidence: report.impactConfidence,
     metadataOnly: true,
   };
 }

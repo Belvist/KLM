@@ -27,3 +27,8 @@ export function sanitizeImpactTaskPreview(raw: string): string {
 export function hashImpactTask(raw: string): string {
   return createHash("sha256").update(raw.trim()).digest("hex");
 }
+
+/** Stable hash for structured plan input (steps/files/routes/tests). */
+export function hashImplementationPlan(raw: string): string {
+  return createHash("sha256").update(raw).digest("hex");
+}
