@@ -196,9 +196,26 @@ Read-only structured impact report before code changes.
 
 See [IMPACT.md](./IMPACT.md).
 
-**Acceptance:** pushed (`28a1eac`); pending CI green + task-redaction fix review.
+**Acceptance:** ✅ accepted (`07559c5`, CI run [#20](https://github.com/Belvist/KLM/actions/runs/26722744606) green).
 
 **Not in 2.7:** patch generation, autonomous edits, chat capture, LLM reasoning (v1 is rule-based/deterministic).
+
+---
+
+## Phase 2.8 — Controlled Plan Verification (planned)
+
+Before code changes, not patches: **task → impact report → implementation plan → verify plan against invariants**.
+
+| #   | Задача                                                               | Статус |
+| --- | -------------------------------------------------------------------- | ------ |
+| 1   | Plan input schema (steps, files, risks)                              | ⏳     |
+| 2   | Verify plan vs impact report + invariants (`klm_verify_plan` or API) | ⏳     |
+| 3   | MCP tool (no projectId in args)                                      | ⏳     |
+| 4   | E2E: safe plan pass, invariant violation fail, missing e2e hint      | ⏳     |
+
+Goal: agent gets explicit verdict — plan safe / violates INV-FE-\* / missing e2e / wrong route scope.
+
+**Not in 2.8:** patch generation, autonomous file edits.
 
 ---
 

@@ -155,9 +155,15 @@ Project id: \`${init.manifest.projectId}\`
 2. Use **invariants** and **decisions** in every plan and code change.
 3. Use **\`klm_search_codebase\`** before grepping large monorepos.
 
-## Before code changes (VERIFY)
+## Before code changes (IMPACT + VERIFY)
 
-- **\`klm_verify_code\`** for auth, API, tenancy, security-sensitive changes.
+Before non-trivial code changes (refactor, new feature, multi-file edit):
+
+1. Call **\`klm_analyze_impact\`** with the task description.
+2. Use the report to plan scope: affected files/routes/symbols, related invariants/decisions, risks, suggested tests.
+3. Call **\`klm_verify_code\`** for auth, API, tenancy, security-sensitive changes.
+
+Impact is read-only (metadata-only). It does not write memory.
 
 ## After significant work (WRITE)
 
