@@ -15,6 +15,7 @@ import {
 import { resolveMcpWorkspaceRoot } from "@klm/project-resolver";
 import { CodebaseQueryReader, handleCodebaseSearch } from "@klm/codebase-indexer";
 import { ImpactAnalyzer, handleImpactAnalyze } from "@klm/impact-analyzer";
+import { PlanVerifier, handlePlanVerify } from "@klm/plan-verifier";
 
 function loadEnv(): void {
   const runtimeRoot =
@@ -74,6 +75,8 @@ const impactAnalyzer =
         },
       })
     : null;
+
+const planVerifier = impactAnalyzer ? new PlanVerifier(impactAnalyzer) : null;
 
 const server = new McpServer({
   name: "klm-runtime",
@@ -241,6 +244,37 @@ server.tool(
   async ({ task, limit }) => {
     const result = await handleImpactAnalyze(impactAnalyzer, tenant().projectId, {
       task,
+      limit,
+    });
+
+    return {
+      content: [{ type: "text" as const, text: JSON.stringify(result, null, 2) }],
+    };
+  }
+);
+
+const planStepSchema = z.object({
+  steps: z.array(z.string()).min(1).max(50),
+  files: z.array(z.string()).max(100).optional(),
+  routes: z
+    .array(z.object({ httpMethod: z.string(), path: z.string() }))
+    .max(50)
+    .optional(),
+  tests: z.array(z.string()).max(50).optional(),
+});
+
+server.tool(
+  "klm_verify_plan",
+  "Verify implementation plan against impact report and invariants (read-only verdict)",
+  {
+    task: z.string().describe("Task description (same as impact analysis)"),
+    plan: planStepSchema.describe("Implementation plan: steps, optional files/routes/tests"),
+    limit: z.number().int().min(1).max(100).optional().describe("Max impact items per category"),
+  },
+  async ({ task, plan, limit }) => {
+    const result = await handlePlanVerify(planVerifier, tenant().projectId, {
+      task,
+      plan,
       limit,
     });
 

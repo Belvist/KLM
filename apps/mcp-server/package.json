@@ -16,6 +16,7 @@
     "@klm/bootstrap": "workspace:*",
     "@klm/codebase-indexer": "workspace:*",
     "@klm/impact-analyzer": "workspace:*",
+    "@klm/plan-verifier": "workspace:*",
     "@klm/project-resolver": "workspace:*",
     "dotenv": "^17.4.2",
     "@modelcontextprotocol/sdk": "^1.12.1",
